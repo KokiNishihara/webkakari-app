@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{NAME}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14212B;--sub:#4C5A66;--line:#DCE8F0;--paper:#F1F8FD;--accent:#A0522D;font-family:"Noto Sans JP",sans-serif;color:var(--ink);line-height:1.85}
+*{box-sizing:border-box;margin:0;padding:0}body{background:#fff}
+header{max-width:1000px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:"Shippori Mincho B1",serif;font-size:22px;letter-spacing:.08em}
+header a{background:var(--accent);color:#fff;text-decoration:none;padding:10px 18px;border-radius:4px;font-weight:700;font-size:14px}
+.hero{max-width:1000px;margin:0 auto;padding:0 20px}
+.hero img{width:100%;aspect-ratio:16/8;object-fit:cover;border-radius:6px;background:var(--paper)}
+.catch{font-family:"Shippori Mincho B1",serif;font-size:clamp(24px,4vw,36px);margin:28px 0 10px;line-height:1.5}
+section{max-width:1000px;margin:0 auto;padding:44px 20px;border-top:1px solid var(--line)}
+h2{font-family:"Shippori Mincho B1",serif;font-size:22px;margin-bottom:16px}
+.news{background:var(--paper);padding:16px 18px;border-left:4px solid var(--accent)}
+dl div{display:grid;grid-template-columns:8em 1fr;padding:12px 0;border-bottom:1px solid var(--line)}dt{font-weight:700}
+.menu li{list-style:none;display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+footer{text-align:center;padding:30px;font-size:12px;color:var(--sub)}
+@media(max-width:600px){dl div{grid-template-columns:1fr}}
+</style></head><body>
+<header><span class="logo" data-edit="name" data-label="店名">{{NAME}}</span><a href="#info" data-edit="cta" data-label="予約ボタンの文字">ご予約</a></header>
+<div class="hero"><img data-edit-img="hero" data-label="トップの写真" src="assets/hero.jpg" alt="">
+<p class="catch" data-edit="catch" data-label="キャッチコピー">季節の素材を、ていねいに。</p>
+<p data-edit="intro" data-label="紹介文">駅から歩いて3分の小さなお店です。昼は定食、夜は季節の一品とお酒をご用意しています。</p></div>
+<section><h2>お知らせ</h2><p class="news" data-edit="news" data-label="お知らせ">10月から秋のランチを始めました。</p></section>
+<section><h2>おしながき</h2><ul class="menu">
+<li><span data-edit="item1" data-label="メニュー1">日替わり定食</span><span data-edit="price1" data-label="メニュー1の価格">1,000円</span></li>
+<li><span data-edit="item2" data-label="メニュー2">焼き魚定食</span><span data-edit="price2" data-label="メニュー2の価格">1,200円</span></li>
+<li><span data-edit="item3" data-label="メニュー3">季節のおまかせ</span><span data-edit="price3" data-label="メニュー3の価格">3,800円</span></li>
+</ul></section>
+<section id="info"><h2>店舗情報</h2><dl>
+<div><dt>営業時間</dt><dd data-edit="hours" data-label="営業時間">11:30〜14:00／17:30〜22:00</dd></div>
+<div><dt>定休日</dt><dd data-edit="holiday" data-label="定休日">日曜日・祝日</dd></div>
+<div><dt>住所</dt><dd data-edit="address" data-label="住所">東京都〇〇区〇〇 1-2-3</dd></div>
+<div><dt>電話</dt><dd data-edit="tel" data-label="電話番号">03-0000-0000</dd></div>
+</dl></section>
+<footer>© {{NAME}}</footer></body></html>
