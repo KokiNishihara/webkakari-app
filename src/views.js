@@ -162,6 +162,20 @@ export function adminLoginPage({ flash: f }) {
 <button class="btn block" style="margin-top:20px">ログイン</button></form></div></main></body></html>`;
 }
 
+export function adminMfaPage({ flash: f }) {
+  return `${head('二段階認証｜Web係 管理')}<body class="admin"><main class="auth"><h1>確認コード</h1><p class="lead">認証アプリに表示されている6桁の数字を入れてください。</p><div class="card">${flash(f)}
+<form method="post" action="/admin/mfa"><label class="f" for="code">6桁のコード</label><input class="input" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required autofocus>
+<button class="btn block" style="margin-top:20px">ログイン</button></form></div></main></body></html>`;
+}
+export function adminMfaSetupPage({ qr, secret, flash: f }) {
+  return `${head('二段階認証の設定｜Web係 管理')}<body class="admin"><main class="auth"><h1>二段階認証の設定</h1><p class="lead">管理画面を守るため、最初に一度だけ設定します。</p><div class="card">${flash(f)}
+<ol style="padding-left:1.2em;font-size:14.5px;color:var(--text-2);display:grid;gap:6px"><li>スマホに認証アプリ（Google Authenticator など）を入れる</li><li>アプリで下のQRコードを読み取る</li><li>アプリに出た6桁を入れる</li></ol>
+<img src="${qr}" alt="二段階認証のQRコード" style="margin:16px auto;width:200px;height:200px">
+<p class="hint" style="text-align:center">読み取れない場合は、このキーを手入力：<br><code style="word-break:break-all">${esc(secret)}</code></p>
+<form method="post" action="/admin/mfa/setup"><label class="f" for="code">6桁のコード</label><input class="input" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
+<button class="btn block" style="margin-top:20px">設定してログイン</button></form></div></main></body></html>`;
+}
+
 export function adminDashboard({ stats, queue, customers, flash: f }) {
   return `${head('ダッシュボード｜Web係 管理')}<body class="admin">${adminTop()}<main class="wrap">${flash(f)}
 <h1>ダッシュボード</h1>
@@ -187,7 +201,7 @@ export function adminCustomerNew({ flash: f }) {
 <div><label class="f">プラン</label><input class="input" name="plan" value="hp" placeholder="hp, gmap, line など"></div>
 <div><label class="f">支払方法</label><select class="input" name="payment_method"><option value="card">クレジットカード（原則）</option><option value="bank_debit">口座振替</option><option value="invoice">請求書（例外）</option></select></div>
 </div>
-<p class="hint" style="margin-top:14px">登録すると、初回のパスワード設定リンクが作られます（メール送信は未設定のため、画面に表示します）。</p>
+<p class="hint" style="margin-top:14px">登録すると、お客さまに「パスワード設定のご案内」メールを送ります。メールが届かない場合に備えて、リンクは次の画面にも表示します。</p>
 <button class="btn" style="margin-top:16px">登録する</button></form></main></body></html>`;
 }
 

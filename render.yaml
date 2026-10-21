@@ -1,0 +1,41 @@
+# Render の設定（Blueprint）。GitHub の main に上げると自動でデプロイされる。
+services:
+  - type: web
+    name: webkakari-app
+    runtime: node
+    plan: starter            # 常時稼働（無料プランはスリープするため不可）
+    region: singapore
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /login
+    disk:                    # DB と HP のファイルを残すための永続ディスク
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /var/data/db
+      - key: SITES_DIR
+        value: /var/data/sites
+      - key: BASE_URL
+        sync: false          # 例：https://webkakari-app.onrender.com（独自ドメインにしたら変更）
+      - key: ANTHROPIC_API_KEY
+        sync: false          # 西原さんがRenderの画面で入力
+      - key: CLOUDFLARE_ACCOUNT_ID
+        sync: false
+      - key: CLOUDFLARE_API_TOKEN
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false          # 初回の管理者作成に使う。作成後は消してよい

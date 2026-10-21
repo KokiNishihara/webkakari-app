@@ -113,3 +113,9 @@ export const all = (sql, ...a) => db.prepare(sql).all(...a);
 export const run = (sql, ...a) => db.prepare(sql).run(...a);
 export const audit = (actor, action, detail = '') =>
   run('INSERT INTO audit_log (actor, action, detail, created_at) VALUES (?,?,?,?)', actor, action, String(detail), now());
+
+// 追加の列（既存DBにも安全に足す）
+for (const [table, col, def] of [['admins', 'totp_secret', 'TEXT']]) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
+  if (!cols.includes(col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
+}

@@ -6,6 +6,9 @@ import { hashPassword, passwordProblem, attemptLogin, createSession, readSession
 import { extractRegions, applyChanges, readVersionHtml, createVersion, publishVersion, versionDir, SITES_DIR } from './sites.js';
 import { proposeChanges, guidelineCheck } from './ai.js';
 import * as V from './views.js';
+import { sendMail, mails } from './mail.js';
+import { newSecret, verifyTotp, otpauthUrl } from './totp.js';
+import QRCode from 'qrcode';
 
 const app = express();
 const PORT = Number(process.env.PORT || 4900);
@@ -91,7 +94,7 @@ app.post('/forgot', (req, res) => {
     const token = newToken();
     run('INSERT INTO tokens (token, customer_id, purpose, expires_at) VALUES (?,?,?,?)', token, c.id, 'reset', now() + 60 * 60 * 1000);
     // TODO: メール送信（送信サービスを決めたら実装）。いまはサーバーのログに出す。
-    console.log(`[パスワード再設定] ${c.email} → ${BASE_URL}/set-password?token=${token}`);
+    sendMail(mails.reset(c, `${BASE_URL}/set-password?token=${token}`));
     audit(`customer:${c.id}`, 'reset-request');
   }
   // 登録の有無は答えない（メールアドレスの存在確認に悪用されないため）
@@ -221,6 +224,7 @@ async function processRequest(requestId) {
   run('INSERT INTO messages (request_id, sender, body, data, created_at) VALUES (?,?,?,?,?)', r.id, 'system',
     '直したあとの画面ができました。内容を確かめて、よろしければ「公開する」を押してください。', JSON.stringify({ summary: p.summary, diffs, warnings, mock: !!p.mock }), now());
   run('UPDATE requests SET status = ?, preview_version_id = ?, summary = ?, updated_at = ? WHERE id = ?', 'review', vid, p.summary, now(), r.id);
+  sendMail(mails.review(c, `${BASE_URL}/app/r/${r.id}`));
 }
 function failRequest(id, e) {
   console.error('[依頼の処理に失敗]', id, e);
@@ -259,9 +263,41 @@ app.get('/admin/login', (req, res) => res.send(V.adminLoginPage({ flash: takeFla
 app.post('/admin/login', (req, res) => {
   const r = attemptLogin('admins', req.body.email, req.body.password);
   if (!r.ok) return res.status(401).send(V.adminLoginPage({ flash: { type: 'err', msg: r.msg } }));
-  res.cookie('asid', createSession('admin', r.user.id), { ...cookieOptions(), maxAge: 12 * 3600 * 1000 });
-  audit(`admin:${r.user.id}`, 'login');
+  // パスワードの次に、二段階認証（6桁コード）へ
+  res.cookie('amfa', createSession('admin_mfa', r.user.id), { ...cookieOptions(), maxAge: 10 * 60 * 1000 });
+  res.redirect(r.user.totp_secret ? '/admin/mfa' : '/admin/mfa/setup');
+});
+const mfaUser = (req) => { const s = readSession(req.cookies.amfa, 'admin_mfa'); return s && one('SELECT * FROM admins WHERE id = ?', s.user_id); };
+function finishAdminLogin(req, res, admin) {
+  destroySession(req.cookies.amfa); res.clearCookie('amfa', { path: '/' });
+  res.cookie('asid', createSession('admin', admin.id), { ...cookieOptions(), maxAge: 12 * 3600 * 1000 });
+  audit(`admin:${admin.id}`, 'login');
   res.redirect('/admin');
+}
+app.get('/admin/mfa', (req, res) => { if (!mfaUser(req)) return res.redirect('/admin/login'); res.send(V.adminMfaPage({})); });
+app.post('/admin/mfa', (req, res) => {
+  const a = mfaUser(req); if (!a) return res.redirect('/admin/login');
+  if (!verifyTotp(a.totp_secret, req.body.code)) return res.status(401).send(V.adminMfaPage({ flash: { type: 'err', msg: 'コードが違います。最新の6桁を入れてください' } }));
+  finishAdminLogin(req, res, a);
+});
+app.get('/admin/mfa/setup', async (req, res) => {
+  const a = mfaUser(req); if (!a || a.totp_secret) return res.redirect('/admin/login');
+  const secret = req.cookies.mfasecret || newSecret();
+  res.cookie('mfasecret', secret, { ...cookieOptions(), maxAge: 10 * 60 * 1000 });
+  const qr = await QRCode.toDataURL(otpauthUrl(secret, a.email), { margin: 1, width: 220 });
+  res.send(V.adminMfaSetupPage({ qr, secret }));
+});
+app.post('/admin/mfa/setup', async (req, res) => {
+  const a = mfaUser(req); const secret = req.cookies.mfasecret;
+  if (!a || a.totp_secret || !secret) return res.redirect('/admin/login');
+  if (!verifyTotp(secret, req.body.code)) {
+    const qr = await QRCode.toDataURL(otpauthUrl(secret, a.email), { margin: 1, width: 220 });
+    return res.status(401).send(V.adminMfaSetupPage({ qr, secret, flash: { type: 'err', msg: 'コードが違います。アプリに表示されている6桁を入れてください' } }));
+  }
+  run('UPDATE admins SET totp_secret = ? WHERE id = ?', secret, a.id);
+  res.clearCookie('mfasecret', { path: '/' });
+  audit(`admin:${a.id}`, 'mfa-enabled');
+  finishAdminLogin(req, res, a);
 });
 app.post('/admin/logout', (req, res) => { destroySession(req.cookies.asid); res.clearCookie('asid', { path: '/' }); res.redirect('/admin/login'); });
 
@@ -296,6 +332,7 @@ app.post('/admin/customers', requireAdmin, (req, res) => {
   const token = newToken();
   run('INSERT INTO tokens (token, customer_id, purpose, expires_at) VALUES (?,?,?,?)', token, cid, 'invite', now() + 7 * 24 * 3600 * 1000);
   audit(`admin:${req.admin.id}`, 'customer-create', cid);
+  sendMail(mails.invite(one('SELECT * FROM customers WHERE id = ?', cid), `${BASE_URL}/set-password?token=${token}`));
   res.redirect(`/admin/customers/${cid}?invite=${encodeURIComponent(token)}`);
 });
 import { readFileSync } from 'node:fs';
@@ -345,6 +382,7 @@ app.post('/admin/r/:id/reply', requireAdmin, (req, res) => {
   const r = one('SELECT * FROM requests WHERE id = ?', Number(req.params.id));
   run('INSERT INTO messages (request_id, sender, body, created_at) VALUES (?,?,?,?)', r.id, 'admin', String(req.body.text).slice(0, 2000), now());
   run('UPDATE requests SET status = CASE WHEN status IN (\'needs_admin\',\'failed\') THEN \'waiting_customer\' ELSE status END, updated_at = ? WHERE id = ?', now(), r.id);
+  sendMail(mails.reply(one('SELECT * FROM customers WHERE id = ?', r.customer_id), `${BASE_URL}/app/r/${r.id}`));
   res.redirect(`/admin/r/${r.id}`);
 });
 app.post('/admin/r/:id/retry', requireAdmin, (req, res) => {
@@ -358,6 +396,8 @@ app.post('/admin/r/:id/publish', requireAdmin, async (req, res) => {
   await publishVersion(r.site_id, r.preview_version_id, `admin:${req.admin.id}`);
   run('UPDATE requests SET status = ?, updated_at = ? WHERE id = ?', 'published', now(), r.id);
   run('INSERT INTO messages (request_id, sender, body, created_at) VALUES (?,?,?,?)', r.id, 'system', '公開しました。ホームページに反映されています。', now());
+  const pc = one('SELECT * FROM customers WHERE id = ?', r.customer_id), ps = one('SELECT * FROM sites WHERE id = ?', r.site_id);
+  sendMail(mails.published(pc, ps.domain ? `https://${ps.domain}/` : `${BASE_URL}/s/${ps.slug}/`));
   res.redirect(`/admin/r/${r.id}`);
 });
 app.post('/admin/r/:id/discard', requireAdmin, (req, res) => {
