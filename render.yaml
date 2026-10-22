@@ -7,7 +7,7 @@ services:
     region: singapore
     buildCommand: npm ci
     startCommand: npm start
-    healthCheckPath: /login
+    healthCheckPath: /healthz
     disk:                    # DB と HP のファイルを残すための永続ディスク
       name: data
       mountPath: /var/data

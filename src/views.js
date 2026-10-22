@@ -165,7 +165,7 @@ ${stepsFor(r.status)}
 
 // ---------- 管理画面 ----------
 const adminTop = () => `<header class="top"><div class="in"><a class="brand" href="/admin">${MARK}Web係 管理</a>
-<div class="right"><a class="btn quiet" href="/admin">ダッシュボード</a><a class="btn quiet" href="/admin/customers/new">契約者を追加</a><form method="post" action="/admin/logout"><button class="btn quiet">ログアウト</button></form></div></div></header>`;
+<div class="right"><a class="btn quiet" href="/admin">ダッシュボード</a><a class="btn quiet" href="/admin/customers/new">契約者を追加</a><a class="btn quiet" href="/admin/backups">バックアップ</a><form method="post" action="/admin/logout"><button class="btn quiet">ログアウト</button></form></div></div></header>`;
 
 export function adminLoginPage({ flash: f }) {
   return `${head('管理ログイン')}<body class="admin"><main class="auth"><h1>Web係 管理画面</h1><div class="card">${flash(f)}
@@ -235,6 +235,8 @@ ${inviteUrl ? `<div class="card" style="margin-bottom:16px"><b>初回のパス�
 <button class="btn" style="margin-top:14px">保存する</button></form>
 <div class="card"><h2 class="sec-h" style="margin-top:0">ホームページ</h2>
 ${site ? `<p>公開中：<a href="/s/${esc(site.slug)}/" target="_blank">/s/${esc(site.slug)}/</a>（版 ${esc(site.live_version_id ?? '—')}）</p>
+<form method="post" action="/admin/sites/${site.id}/domain" class="line" style="margin-top:10px"><input class="input" name="domain" value="${esc(site.domain || '')}" placeholder="独自ドメイン（例：minato-shokudo.jp）"><button class="btn ghost">登録</button></form>
+<p class="hint">DNS の設定：ドメインの管理画面で、<b>${esc(new URL(process.env.BASE_URL || 'http://localhost:4900').host)}</b> に向ける CNAME（www 付き）を作り、Render の「Custom Domains」にも同じドメインを追加してから登録してください。</p>
 <form method="post" action="/admin/sites/${site.id}/upload" style="margin-top:12px" data-html-upload><label class="f">HTMLを差し替える（新しい版として登録）</label><input type="file" name="html" accept=".html,text/html" data-upload-html><input type="hidden" name="html_b64"><button class="btn ghost" style="margin-top:8px">登録する</button></form>
 <table class="t" style="margin-top:14px"><tr><th>版</th><th>内容</th><th>作成</th><th></th></tr>${versions.map((v) => `<tr><td>${v.id}${site.live_version_id === v.id ? ' <span class="badge b-published">公開中</span>' : ''}</td><td>${esc(v.note || '')}</td><td>${esc(v.created_by)}　${when(v.created_at)}</td><td><a href="/p/${esc(site.slug)}/v${v.id}/" target="_blank">見る</a>${site.live_version_id === v.id ? '' : `<form method="post" action="/admin/sites/${site.id}/publish/${v.id}" style="display:inline"><button class="btn quiet">この版を公開</button></form>`}</td></tr>`).join('')}</table>` : '<p class="muted">サイトが未登録です。</p>'}
 </div></div>
@@ -389,4 +391,13 @@ export function termsPage(md, brand) {
       return `<p>${esc(blk.replace(/\*\*/g, '')).replace(/\n/g, '<br>')}</p>`;
     }).join('\n');
   return `${head(`利用規約｜${brand}`)}<body><main class="wrap narrow legal"><h1 class="page-h">${esc(brand)} 利用規約</h1>${body}</main></body></html>`;
+}
+
+export function adminBackupsPage({ backups, flash: f }) {
+  return `${head('バックアップ｜Web係 管理')}<body class="admin">${adminTop()}<main class="wrap" style="max-width:760px">${flash(f)}
+<h1>バックアップ</h1>
+<p class="hint">契約者・依頼・料金などのデータ（DB）を毎日自動で保存しています（14日分）。HPのファイルは版ごとにすべて残しています。サーバーのディスク自体も Render が毎日スナップショットを取っています。月に1回は、ここから手元（会社のPC）にも保存してください。</p>
+<form method="post" action="/admin/backups" style="margin:14px 0"><button class="btn ghost">いまバックアップを作る</button></form>
+<table class="t"><tr><th>ファイル</th><th>大きさ</th><th></th></tr>${backups.map((b) => `<tr><td>${esc(b.name)}</td><td>${Math.round(b.size / 1024).toLocaleString()} KB</td><td><a href="/admin/backups/${esc(b.name)}">手元に保存</a></td></tr>`).join('') || '<tr><td colspan="3" class="muted">まだありません</td></tr>'}</table>
+</main></body></html>`;
 }

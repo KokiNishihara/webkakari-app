@@ -10,6 +10,7 @@ import { sendMail, mails } from './mail.js';
 import { newSecret, verifyTotp, otpauthUrl } from './totp.js';
 import QRCode from 'qrcode';
 import sharp from 'sharp';
+import { ensureAdmin, recoverStuck, startJobs, backupNow, listBackups, BACKUP_DIR } from './jobs.js';
 import { computeQuote, readBillingForm } from './pricing.js';
 import { stripeMode, startCheckout, syncCheckout, markPaid, portalUrl, applyToSubscription, addOneTimeCharge, verifyWebhook, handleEvent } from './billing.js';
 
@@ -19,6 +20,27 @@ const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const MAX_REQUESTS_PER_HOUR = 20; // AI費用の暴走を防ぐ
 
 app.disable('x-powered-by');
+app.set('trust proxy', 1); // Render の前段（ロードバランサー）越しに https とお客さまのIPを正しく扱う
+const APP_HOST = new URL(BASE_URL).host;
+
+// 死活確認（Render のヘルスチェック用）。DB が読めることまで確かめる
+app.get('/healthz', (req, res) => { try { one('SELECT 1 AS ok'); res.send('ok'); } catch { res.status(500).send('db error'); } });
+
+// お客さまの独自ドメインで来たアクセスは、そのお店のHP（公開中の版）を返す
+// 例：minato-shokudo.jp を DNS でこのサーバーに向け、管理画面の「独自ドメイン」に登録すると表示される
+app.use((req, res, next) => {
+  const host = String(req.headers.host || '').toLowerCase().split(':')[0];
+  if (!host || host === APP_HOST.split(':')[0] || host === 'localhost' || host.endsWith('.onrender.com')) return next();
+  const bare = host.replace(/^www\./, '');
+  const site = one('SELECT * FROM sites WHERE domain = ? OR domain = ?', bare, host);
+  if (!site?.live_version_id) return res.status(404).send(V.notFound());
+  if (host.startsWith('www.') && site.domain === bare) return res.redirect(301, `https://${bare}${req.originalUrl}`);
+  if (req.method !== 'GET' && req.method !== 'HEAD') return res.status(405).end();
+  const rel = decodeURIComponent(req.path).replace(/^\/+/, '') || 'index.html';
+  if (rel.includes('..')) return res.status(400).end();
+  res.setHeader('Cache-Control', rel.endsWith('.html') ? 'public, max-age=60' : 'public, max-age=86400');
+  res.sendFile(rel.endsWith('/') ? rel + 'index.html' : rel, { root: versionDir(site.slug, site.live_version_id), dotfiles: 'deny' }, (err) => { if (err && !res.headersSent) res.status(404).send(V.notFound()); });
+});
 
 // Stripe からの通知は、署名の確認のため加工前の本文で受け取る（JSONの読み込みより前に置く）
 app.post('/stripe/webhook', express.raw({ type: 'application/json', limit: '1mb' }), (req, res) => {
@@ -43,6 +65,9 @@ app.use((req, res, next) => {
   req.cookies = cookies(req);
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'same-origin');
+  // 管理画面・マイページは他サイトに埋め込ませない（確認画面のiframeは同じサイトなので可）
+  if (!req.path.startsWith('/s/')) res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  if (process.env.NODE_ENV === 'production') res.setHeader('Strict-Transport-Security', 'max-age=31536000');
   if (req.method === 'POST') {
     const origin = req.headers.origin;
     if (origin && new URL(origin).host !== req.headers.host) return res.status(403).send('不正なリクエストです');
@@ -288,10 +313,13 @@ async function processRequest(requestId) {
   sendMail(mails.review(c, `${BASE_URL}/app/r/${r.id}`));
 }
 function failRequest(id, e) {
-  console.error('[依頼の処理に失敗]', id, e);
+  console.error('[依頼の処理に失敗]', id, e.message);
   audit('ai', 'failed', `request=${id} ${e.message}`);
   run('UPDATE requests SET status = ?, updated_at = ? WHERE id = ?', 'failed', now(), id);
+  const c = one('SELECT c.business_name FROM requests r JOIN customers c ON c.id = r.customer_id WHERE r.id = ?', id);
+  sendMail(mails.adminNotice(`【要対応】${c?.business_name || ''} のご依頼をAIで処理できませんでした`, `${BASE_URL}/admin/r/${id}\n\n理由：${e.message}`));
 }
+process.on('unhandledRejection', (e) => console.error('[未処理のエラー]', e));
 
 // ================= HPの配信 =================
 // 本番の版（だれでも見られる）
@@ -542,13 +570,43 @@ app.post('/admin/customers/:id', requireAdmin, (req, res) => {
   setFlash(res, 'ok', '保存しました');
   res.redirect(`/admin/customers/${id}`);
 });
+// 独自ドメインの登録（DNSでこのサーバーに向けたあとに登録すると、そのドメインでHPが表示される）
+app.post('/admin/sites/:id/domain', requireAdmin, (req, res) => {
+  const site = one('SELECT * FROM sites WHERE id = ?', Number(req.params.id)); if (!site) return res.status(404).send(V.notFound());
+  const d = String(req.body.domain || '').normalize('NFKC').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/^www\./, '');
+  if (d && !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(d)) { setFlash(res, 'err', 'ドメインの形が正しくありません（例：minato-shokudo.jp）'); return res.redirect(`/admin/customers/${site.customer_id}`); }
+  if (d && one('SELECT id FROM sites WHERE domain = ? AND id != ?', d, site.id)) { setFlash(res, 'err', 'このドメインは別の契約者に登録されています'); return res.redirect(`/admin/customers/${site.customer_id}`); }
+  run('UPDATE sites SET domain = ? WHERE id = ?', d || null, site.id);
+  audit(`admin:${req.admin.id}`, 'domain', `${site.slug} ${d}`);
+  setFlash(res, 'ok', d ? `独自ドメイン ${d} を登録しました` : '独自ドメインを外しました');
+  res.redirect(`/admin/customers/${site.customer_id}`);
+});
+// バックアップ（毎日自動で取る分の一覧と、手元への保存）
+app.get('/admin/backups', requireAdmin, (req, res) => res.send(V.adminBackupsPage({ backups: listBackups(), flash: takeFlash(req, res) })));
+app.post('/admin/backups', requireAdmin, (req, res) => {
+  try { const b = backupNow(); audit(`admin:${req.admin.id}`, 'backup', b.name); setFlash(res, 'ok', `バックアップを作りました（${b.name}）`); }
+  catch (e) { setFlash(res, 'err', e.message); }
+  res.redirect('/admin/backups');
+});
+app.get('/admin/backups/:name', requireAdmin, (req, res) => {
+  const name = path.basename(req.params.name);
+  if (!/^app-\d{4}-\d{2}-\d{2}\.db$/.test(name)) return res.status(404).end();
+  audit(`admin:${req.admin.id}`, 'backup-download', name);
+  res.download(path.join(BACKUP_DIR, name));
+});
+
 app.post('/admin/sites/:id/upload', requireAdmin, (req, res) => {
   const site = one('SELECT * FROM sites WHERE id = ?', Number(req.params.id));
   const html = Buffer.from(String(req.body.html_b64 || ''), 'base64').toString('utf8');
   if (!site || !/<html|<!doctype/i.test(html)) { setFlash(res, 'err', 'HTMLを読み込めませんでした'); return res.redirect('back'); }
   const vid = createVersion({ site, parentId: site.live_version_id, html, note: 'HTMLを差し替え', createdBy: 'admin' });
   audit(`admin:${req.admin.id}`, 'upload', `site=${site.slug} v=${vid}`);
-  setFlash(res, 'ok', `版 ${vid} として登録しました（まだ公開していません）`);
+  // チャットで変えられる場所の点検（印が無い・文字数の上限が無い場所を知らせる）
+  const regs = extractRegions(html);
+  const noMax = regs.filter((x) => x.type === 'text' && !x.max).map((x) => x.label);
+  const note = !regs.length ? '。注意：チャットで変えられる場所の印（data-edit）が1つもありません'
+    : `。チャットで変えられる場所 ${regs.length} か所${noMax.length ? `（文字数の上限なし：${noMax.slice(0, 6).join('、')}${noMax.length > 6 ? ' ほか' : ''}）` : ''}`;
+  setFlash(res, regs.length ? 'ok' : 'err', `版 ${vid} として登録しました（まだ公開していません）${note}`);
   res.redirect(`/admin/customers/${site.customer_id}`);
 });
 app.post('/admin/sites/:id/publish/:vid', requireAdmin, async (req, res) => {
@@ -595,4 +653,7 @@ app.post('/admin/r/:id/discard', requireAdmin, (req, res) => {
 app.use((req, res) => res.status(404).send(V.notFound()));
 app.use((err, req, res, next) => { console.error(err); res.status(500).send('エラーが起きました。時間をおいてお試しください'); });
 
+ensureAdmin();
+recoverStuck();
+startJobs({ baseUrl: BASE_URL });
 app.listen(PORT, () => console.log(`Web係 管理システム: ${BASE_URL}  （AI: ${process.env.ANTHROPIC_API_KEY ? 'Claude' : '仮の動作'}／決済: ${{ mock: '仮の決済', test: 'Stripeテスト', live: 'Stripe本番' }[stripeMode()]}）`));
