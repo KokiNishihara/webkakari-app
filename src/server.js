@@ -353,7 +353,7 @@ app.post('/pay/:token', async (req, res) => {
     }
     res.redirect(303, r.url);
   } catch (e) {
-    console.error('[決済画面の作成に失敗]', e);
+    console.error('[決済画面の作成に失敗]', e.message);
     setFlash(res, 'err', 'お支払い画面を開けませんでした。時間をおいてお試しいただくか、担当者にご連絡ください');
     res.redirect(`/pay/${t.token}`);
   }

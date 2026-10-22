@@ -44,7 +44,7 @@ export async function startCheckout(c, quote, { successUrl, cancelUrl }) {
   const session = await s.checkout.sessions.create({
     mode: 'subscription',
     locale: 'ja',
-    payment_method_types: ['card'],
+    // 支払い方法（カードなど）は Stripe の管理画面「設定 → 決済手段」で決める（APIでは指定できない）
     line_items,
     ...(coupon ? { discounts: [{ coupon }] } : {}),
     ...(c.stripe_customer_id ? { customer: c.stripe_customer_id } : { customer_email: c.email }),
