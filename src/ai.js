@@ -39,7 +39,7 @@ export function maskPersonalInfo(text) {
 const unmask = (v, map) => Object.entries(map).reduce((s, [k, real]) => s.replaceAll(k, real), String(v));
 
 // 医療広告ガイドラインで使えない代表的な表現（AIとは別に機械的にも確認する）
-const CLINIC_NG = ['日本一', 'No.1', 'ナンバーワン', '最高', '最先端', '絶対', '必ず治', '痛くない', '100%', '完全', '安心安全'];
+const CLINIC_NG = ['日本一', 'No.1', 'ナンバーワン', '最高', '最先端', '絶対', '必ず治', '痛くない', '100%', '完全', '安心安全', '地域一番', '名医', '体験談', '患者様の声', '口コミ', '今なら', 'キャンペーン', '期間限定', '割引', 'モニター価格'];
 export function guidelineCheck(businessType, changes, listChanges = []) {
   if (businessType !== 'clinic') return [];
   const hits = [];

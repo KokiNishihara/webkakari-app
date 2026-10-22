@@ -41,6 +41,22 @@ export function seoInject(html, { site, customer, baseUrl }) {
   }
   // 正規のURL（同じ中身が複数のURLで見えても、検索エンジンにはこのURLを正とする）
   if (!/rel="canonical"/i.test(out)) out = out.replace(/<\/head>/i, `<link rel="canonical" href="${esc(origin)}/">\n</head>`);
+  // SNSで共有されたときの表示（OGP）
+  const title = (out.match(/<title>([^<]*)<\/title>/) || [])[1] || name;
+  const desc = (out.match(/<meta\s+name="description"\s+content="([^"]*)"/i) || [])[1] || '';
+  const hero = regions.find((r) => r.key === 'hero' && r.type === 'image');
+  const og = [['og:type', 'website'], ['og:title', title], ['og:description', desc], ['og:url', `${origin}/`], ...(hero ? [['og:image', `${origin}/${hero.value}`]] : []), ['og:locale', 'ja_JP']]
+    .filter(([k]) => !new RegExp(`property="${k}"`).test(out))
+    .map(([k, v]) => `<meta property="${k}" content="${k === 'og:title' || k === 'og:description' ? v : esc(v)}">`).join('\n');
+  if (og) out = out.replace(/<\/head>/i, `${og}\n${/name="twitter:card"/.test(out) ? '' : '<meta name="twitter:card" content="summary_large_image">\n'}</head>`);
+  // 電話番号は押すと電話がかかるリンクにする（スマホで探している人の行動につなげる）
+  out = out.replace(/(<[a-z0-9]+[^>]*\sdata-edit="tel"[^>]*>)([^<]+)(<\/[a-z0-9]+>)/i, (m, a, t, b) => {
+    const num = t.normalize('NFKC').replace(/[^\d+]/g, '');
+    return num.length >= 10 ? `${a}<a href="tel:${num}">${t}</a>${b}` : m;
+  });
+  // 画像：最初の1枚（トップの写真）は優先して読み込み、ほかは見える位置に来てから読み込む（表示の速さ＝Core Web Vitals）
+  let first = true;
+  out = out.replace(/<img\b(?![^>]*\bloading=)([^>]*)>/gi, (m, a) => { const r = first ? `<img fetchpriority="high" decoding="async"${a}>` : `<img loading="lazy" decoding="async"${a}>`; first = false; return r; });
   // 構造化データ（Google に店名・住所・電話・営業時間を正確に伝える）
   const ld = {
     '@context': 'https://schema.org',
