@@ -130,3 +130,25 @@
       .then((r) => r.json()).then((res) => { if (res.blocked && !document.querySelector('[data-layout-warn]')) location.reload(); }).catch(() => {});
   }, 600), { once: true });
 })();
+
+// 管理：契約者の一覧を探す・絞り込む／行のどこを押しても開く
+(() => {
+  const table = document.querySelector('[data-rows]'); if (!table) return;
+  const rows = [...table.querySelectorAll('tbody tr')];
+  const q = document.querySelector('[data-filter-text]'), type = document.querySelector('[data-filter-type]');
+  const segs = [...document.querySelectorAll('[data-filter-status]')];
+  let status = '';
+  const apply = () => {
+    const t = (q.value || '').trim().toLowerCase();
+    let n = 0;
+    rows.forEach((r) => {
+      const ok = (!t || r.dataset.text.includes(t)) && (!status || r.dataset.status === status) && (!type.value || r.dataset.type === type.value);
+      r.hidden = !ok; if (ok) n++;
+    });
+    document.querySelector('[data-count]').textContent = `${n}件`;
+    document.querySelector('[data-none]').hidden = n > 0;
+  };
+  q.addEventListener('input', apply); type.addEventListener('change', apply);
+  segs.forEach((b) => b.addEventListener('click', () => { status = b.dataset.filterStatus; segs.forEach((x) => x.setAttribute('aria-pressed', String(x === b))); apply(); }));
+  rows.forEach((r) => r.addEventListener('click', (e) => { if (!e.target.closest('a')) location.href = r.dataset.href; }));
+})();

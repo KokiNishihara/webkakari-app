@@ -574,9 +574,19 @@ app.post('/admin/logout', (req, res) => { destroySession(req.cookies.asid); res.
 
 app.get('/admin', requireAdmin, (req, res) => {
   const customers = all('SELECT * FROM customers ORDER BY created_at DESC');
-  const queue = all(`SELECT r.*, c.business_name, ${firstText} AS first_text FROM requests r JOIN customers c ON c.id = r.customer_id WHERE r.status IN ('needs_admin','failed') OR r.admin_flag = 1 ORDER BY r.updated_at`);
-  const active = customers.filter((c) => c.status === 'active');
-  const stats = { active: active.length, mrr: active.reduce((s, c) => s + c.monthly_fee, 0), attention: queue.length, pastDue: customers.filter((c) => c.payment_status === 'past_due').length };
+  const queue = all(`SELECT r.*, c.business_name, c.business_type, ${firstText} AS first_text FROM requests r JOIN customers c ON c.id = r.customer_id
+    WHERE (r.status IN ('needs_admin','failed') OR r.admin_flag = 1) AND r.status NOT IN ('discarded','published') ORDER BY r.updated_at`);
+  const live = customers.filter((c) => c.status !== 'canceled');
+  const paying = live.filter((c) => c.payment_status === 'active');
+  const stats = {
+    active: live.filter((c) => c.status === 'active').length,
+    onboarding: live.filter((c) => c.status === 'onboarding').length,
+    mrr: paying.reduce((s, c) => s + c.monthly_fee, 0),
+    paying: paying.length,
+    attention: queue.length,
+    pastDue: live.filter((c) => c.payment_status === 'past_due').length,
+    canceling: live.filter((c) => c.cancel_at).length,
+  };
   res.send(V.adminDashboard({ stats, queue, customers, flash: takeFlash(req, res) }));
 });
 app.get('/admin/customers/new', requireAdmin, (req, res) => res.send(V.adminCustomerNew({})));
@@ -705,7 +715,7 @@ app.post('/admin/r/:id/publish', requireAdmin, async (req, res) => {
   res.redirect(`/admin/r/${r.id}`);
 });
 app.post('/admin/r/:id/discard', requireAdmin, (req, res) => {
-  run('UPDATE requests SET status = ?, updated_at = ? WHERE id = ?', 'discarded', now(), Number(req.params.id));
+  run('UPDATE requests SET status = ?, admin_flag = 0, updated_at = ? WHERE id = ?', 'discarded', now(), Number(req.params.id));
   res.redirect(`/admin/r/${req.params.id}`);
 });
 

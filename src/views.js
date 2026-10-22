@@ -188,16 +188,54 @@ export function adminMfaSetupPage({ qr, secret, flash: f }) {
 <button class="btn block" style="margin-top:20px">設定してログイン</button></form></div></main></body></html>`;
 }
 
+const yenA = (n) => `${Number(n || 0).toLocaleString('ja-JP')}円`;
+const ago = (ms) => { const m = Math.round((Date.now() - ms) / 60000); if (m < 60) return `${Math.max(m, 1)}分前`; const h = Math.round(m / 60); if (h < 24) return `${h}時間前`; return `${Math.round(h / 24)}日前`; };
+const PAY = { pending: ['未開始', 'mute'], active: ['正常', 'ok'], past_due: ['遅れ', 'ng'], canceled: ['停止', 'mute'] };
+const STAT = { onboarding: ['準備中', 'warn'], active: ['契約中', 'ok'], canceled: ['解約', 'mute'] };
+const METHOD = { card: 'カード', bank_debit: '口座振替', invoice: '請求書' };
+const tag = ([label, tone]) => `<span class="st st-${tone}">${esc(label)}</span>`;
+
 export function adminDashboard({ stats, queue, customers, flash: f }) {
+  const today = new Date().toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' });
   return `${head('ダッシュボード｜Web係 管理')}<body class="admin">${adminTop()}<main class="wrap">${flash(f)}
-<h1>ダッシュボード</h1>
-<div class="kpis"><div class="kpi"><b>${stats.active}</b><span>契約中</span></div><div class="kpi"><b>${stats.mrr.toLocaleString()}円</b><span>月額の合計</span></div><div class="kpi"><b>${stats.attention}</b><span>対応が必要な依頼</span></div><div class="kpi"><b>${stats.pastDue}</b><span>支払いの遅れ</span></div></div>
-<h2 class="sec-h">対応が必要な依頼</h2>
-${queue.length ? `<table class="t"><tr><th>契約者</th><th>状態</th><th>内容</th><th>更新</th></tr>${queue.map((r) => `<tr><td>${esc(r.business_name)}</td><td>${badge(r.status)}</td><td><a href="/admin/r/${r.id}">${esc(r.first_text || '')}</a></td><td>${when(r.updated_at)}</td></tr>`).join('')}</table>` : '<p class="muted">いまはありません。</p>'}
-<h2 class="sec-h">契約者</h2>
-<table class="t"><tr><th>店名・医院名</th><th>種別</th><th>月額</th><th>支払い</th><th>状態</th><th>最低期間の終了</th></tr>
-${customers.map((c) => `<tr><td><a href="/admin/customers/${c.id}">${esc(c.business_name)}</a><div class="muted">${esc(c.email)}</div></td><td>${c.business_type === 'clinic' ? '医院' : '飲食店'}</td><td>${Number(c.monthly_fee).toLocaleString()}円</td><td>${esc({ card: 'カード', bank_debit: '口座振替', invoice: '請求書' }[c.payment_method])}／${esc({ pending: '未開始', active: '正常', past_due: '遅れ', canceled: '停止' }[c.payment_status])}</td><td>${esc({ onboarding: '準備中', active: '契約中', canceled: '解約' }[c.status])}</td><td>${esc(c.min_term_end || '—')}</td></tr>`).join('')}
-</table></main></body></html>`;
+<div class="page-top"><div><h1>ダッシュボード</h1><p class="sub">${esc(today)}</p></div><a class="btn" href="/admin/customers/new">契約者を追加</a></div>
+
+<section class="stats" aria-label="いまの数字">
+<div class="stat lead"><span class="lbl">月額の合計（税込）</span><b>${yenA(stats.mrr)}</b><span class="note">お支払いが正常な ${stats.paying} 件</span></div>
+<div class="stat"><span class="lbl">契約中</span><b>${stats.active}<small>件</small></b><span class="note">準備中 ${stats.onboarding} 件</span></div>
+<div class="stat ${stats.attention ? 'is-warn' : ''}"><span class="lbl">対応待ちの依頼</span><b>${stats.attention}<small>件</small></b><span class="note">${stats.attention ? '下の一覧から対応' : 'いまはありません'}</span></div>
+<div class="stat ${stats.pastDue ? 'is-ng' : ''}"><span class="lbl">支払いの遅れ</span><b>${stats.pastDue}<small>件</small></b><span class="note">解約予定 ${stats.canceling} 件</span></div>
+</section>
+
+<section class="panel">
+<div class="panel-h"><h2>対応待ちの依頼</h2><span class="count">${queue.length}件</span></div>
+${queue.length ? `<ul class="queue">${queue.map((r) => `<li><a href="/admin/r/${r.id}">
+<span class="q-st">${badge(r.status === 'review' ? 'needs_admin' : r.status)}</span>
+<span class="q-main"><b>${esc(r.business_name)}</b><span class="q-text">${esc(r.first_text || '')}</span></span>
+<time datetime="${new Date(r.updated_at).toISOString()}">${ago(r.updated_at)}</time></a></li>`).join('')}</ul>`
+    : `<p class="empty-line">対応待ちの依頼はありません。AIで対応できない依頼や、表示の崩れが見つかった修正がここに入ります。</p>`}
+</section>
+
+<section class="panel">
+<div class="panel-h"><h2>契約者</h2><span class="count" data-count>${customers.length}件</span></div>
+<div class="toolbar">
+<input class="input search" type="search" placeholder="店名・メールで探す" data-filter-text aria-label="店名・メールで探す">
+<div class="seg" role="group" aria-label="状態で絞り込む">${[['', 'すべて'], ['active', '契約中'], ['onboarding', '準備中'], ['canceled', '解約']].map(([v, l], i) => `<button type="button" data-filter-status="${v}" aria-pressed="${i === 0}">${l}</button>`).join('')}</div>
+<select class="input type" data-filter-type aria-label="種別で絞り込む"><option value="">種別：すべて</option><option value="food">飲食店</option><option value="clinic">医院</option></select>
+</div>
+${customers.length ? `<div class="tbl-wrap"><table class="t2" data-rows>
+<thead><tr><th>店名・医院名</th><th>種別</th><th class="r">月額（税込）</th><th>支払い</th><th>状態</th><th>最低期間の終了</th></tr></thead>
+<tbody>${customers.map((c) => `<tr data-href="/admin/customers/${c.id}" data-status="${esc(c.status)}" data-type="${esc(c.business_type)}" data-text="${esc((c.business_name + ' ' + c.email).toLowerCase())}">
+<td><a href="/admin/customers/${c.id}" class="nm">${esc(c.business_name)}</a><span class="em">${esc(c.email)}</span></td>
+<td>${c.business_type === 'clinic' ? '医院' : '飲食店'}</td>
+<td class="r num">${yenA(c.monthly_fee)}</td>
+<td>${tag(PAY[c.payment_status] || [c.payment_status, 'mute'])}<span class="em">${esc(METHOD[c.payment_method] || '')}</span></td>
+<td>${tag(STAT[c.status] || [c.status, 'mute'])}${c.cancel_at ? `<span class="em ng-t">${esc(c.cancel_at)} 解約予定</span>` : ''}</td>
+<td class="num">${esc(c.min_term_end || '—')}</td></tr>`).join('')}</tbody></table>
+<p class="empty-line" data-none hidden>条件に合う契約者はいません。</p></div>`
+    : `<p class="empty-line">まだ契約者はいません。右上の「契約者を追加」から登録します。</p>`}
+</section>
+</main></body></html>`;
 }
 
 export function adminCustomerNew({ flash: f }) {
@@ -219,10 +257,22 @@ export function adminCustomerNew({ flash: f }) {
 
 export function adminCustomerPage({ c, site, versions, requests, inviteUrl, payUrl, quote, billed, mode, audits, flash: f }) {
   return `${head(`${c.business_name}｜Web係 管理`)}<body class="admin">${adminTop()}<main class="wrap">${flash(f)}
-<h1>${esc(c.business_name)}</h1>
+<p class="crumb"><a href="/admin">ダッシュボード</a> ／ 契約者</p>
+<div class="page-top"><div><h1>${esc(c.business_name)}</h1>
+<p class="sub">${c.business_type === 'clinic' ? '院のWeb係' : '飲食店のWeb係'}　${tag(STAT[c.status] || [c.status, 'mute'])}　${tag(PAY[c.payment_status] || [c.payment_status, 'mute'])}${c.cancel_at ? `　<span class="st st-ng">${esc(c.cancel_at)} 解約予定</span>` : ''}</p></div>
+${site ? `<a class="btn ghost" href="/s/${esc(site.slug)}/" target="_blank" rel="noopener">HPを見る</a>` : ''}</div>
+<dl class="facts-row">
+<div><dt>月額（税込）</dt><dd class="num">${yenA(c.monthly_fee)}</dd></div>
+<div><dt>お支払い</dt><dd>${esc(METHOD[c.payment_method] || '')}</dd></div>
+<div><dt>公開日</dt><dd class="num">${esc(c.contract_start || '未設定')}</dd></div>
+<div><dt>最低期間の終了</dt><dd class="num">${esc(c.min_term_end || '—')}</dd></div>
+<div><dt>ご担当者</dt><dd>${esc(c.contact_name)}　<span class="em">${esc(c.email)}</span></dd></div>
+</dl>
+<nav class="subnav" aria-label="このページの中"><a href="#billing">料金とお支払い</a><a href="#site">ホームページ</a><a href="#requests">ご依頼</a><a href="#contract">契約の内容</a><a href="#cancel">解約</a></nav>
 ${inviteUrl ? `<div class="card" style="margin-bottom:16px"><b>初回のパスワード設定リンク</b><p class="hint">お客さまに送ってください（7日間有効）。</p><div class="copy" style="margin-top:8px"><input class="input" readonly value="${esc(inviteUrl)}" data-copy-src><button type="button" class="btn ghost" data-copy>コピー</button></div></div>` : ''}
+${billingCard({ c, quote, billed, payUrl, mode, audits })}
 <div class="grid2">
-<form method="post" action="/admin/customers/${c.id}" class="card"><h2 class="sec-h" style="margin-top:0">契約の内容</h2><div class="form-grid">
+<form method="post" action="/admin/customers/${c.id}" class="card" id="contract"><h2 class="sec-h" style="margin-top:0">契約の内容</h2><div class="form-grid">
 <div><label class="f">ご担当者名</label><input class="input" name="contact_name" value="${esc(c.contact_name)}"></div>
 <div><label class="f">電話番号</label><input class="input" name="phone" value="${esc(c.phone || '')}"></div>
 <input type="hidden" name="plan" value="${esc(c.plan)}"><input type="hidden" name="monthly_fee" value="${esc(c.monthly_fee)}">
@@ -233,16 +283,15 @@ ${inviteUrl ? `<div class="card" style="margin-bottom:16px"><b>初回のパス�
 </div><p class="hint">最低利用期間の終了日：${esc(c.min_term_end || '公開日を入れると自動で計算します')}</p>
 <label class="f">メモ</label><textarea class="input" name="notes" rows="3">${esc(c.notes || '')}</textarea>
 <button class="btn" style="margin-top:14px">保存する</button></form>
-<div class="card"><h2 class="sec-h" style="margin-top:0">ホームページ</h2>
+<div class="card" id="site"><h2 class="sec-h" style="margin-top:0">ホームページ</h2>
 ${site ? `<p>公開中：<a href="/s/${esc(site.slug)}/" target="_blank">/s/${esc(site.slug)}/</a>（版 ${esc(site.live_version_id ?? '—')}）</p>
 <form method="post" action="/admin/sites/${site.id}/domain" class="line" style="margin-top:10px"><input class="input" name="domain" value="${esc(site.domain || '')}" placeholder="独自ドメイン（例：minato-shokudo.jp）"><button class="btn ghost">登録</button></form>
 <p class="hint">DNS の設定：ドメインの管理画面で、<b>${esc(new URL(process.env.BASE_URL || 'http://localhost:4900').host)}</b> に向ける CNAME（www 付き）を作り、Render の「Custom Domains」にも同じドメインを追加してから登録してください。</p>
 <form method="post" action="/admin/sites/${site.id}/upload" style="margin-top:12px" data-html-upload><label class="f">HTMLを差し替える（新しい版として登録）</label><input type="file" name="html" accept=".html,text/html" data-upload-html><input type="hidden" name="html_b64"><button class="btn ghost" style="margin-top:8px">登録する</button></form>
 <table class="t" style="margin-top:14px"><tr><th>版</th><th>内容</th><th>作成</th><th></th></tr>${versions.map((v) => `<tr><td>${v.id}${site.live_version_id === v.id ? ' <span class="badge b-published">公開中</span>' : ''}</td><td>${esc(v.note || '')}</td><td>${esc(v.created_by)}　${when(v.created_at)}</td><td><a href="/p/${esc(site.slug)}/v${v.id}/" target="_blank">見る</a>${site.live_version_id === v.id ? '' : `<form method="post" action="/admin/sites/${site.id}/publish/${v.id}" style="display:inline"><button class="btn quiet">この版を公開</button></form>`}</td></tr>`).join('')}</table>` : '<p class="muted">サイトが未登録です。</p>'}
 </div></div>
-${billingCard({ c, quote, billed, payUrl, mode, audits })}
-<h2 class="sec-h">ご依頼</h2>
-<table class="t"><tr><th>状態</th><th>内容</th><th>更新</th></tr>${requests.map((r) => `<tr><td>${badge(r.status)}</td><td><a href="/admin/r/${r.id}">${esc(r.first_text || '')}</a></td><td>${when(r.updated_at)}</td></tr>`).join('')}</table>
+<section class="panel" id="requests"><div class="panel-h"><h2>ご依頼</h2><span class="count">${requests.length}件</span></div>
+${requests.length ? `<ul class="queue">${requests.map((r) => `<li><a href="/admin/r/${r.id}"><span class="q-st">${badge(r.status)}</span><span class="q-main"><b>${esc(r.summary || '変更のご依頼')}</b><span class="q-text">${esc(r.first_text || '')}</span></span><time>${when(r.updated_at)}</time></a></li>`).join('')}</ul>` : '<p class="empty-line">まだご依頼はありません。</p>'}</section>
 </main></body></html>`;
 }
 
