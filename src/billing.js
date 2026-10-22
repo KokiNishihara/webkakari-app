@@ -1,12 +1,12 @@
 // Stripe での月額課金。カード番号は当社では一切受け取らない（Stripeの画面で入力してもらう）。
 // STRIPE_SECRET_KEY が無いときは「仮の決済」で流れだけ確認できる。
-// 本番のキー（sk_live_）は STRIPE_ALLOW_LIVE=1 のときだけ使う（テストのつもりで本番に請求しないため）。
+// 本番のキー（sk_live_ / rk_live_）は STRIPE_ALLOW_LIVE=1 のときだけ使う（テストのつもりで本番に請求しないため）。
 import Stripe from 'stripe';
 import { one, run, now, audit, getSetting, setSetting } from './db.js';
 import { BRAND } from './pricing.js';
 
 const KEY = process.env.STRIPE_SECRET_KEY || '';
-export const stripeMode = () => (!KEY ? 'mock' : KEY.startsWith('sk_live_') ? 'live' : 'test');
+export const stripeMode = () => (!KEY ? 'mock' : /^(sk|rk)_live_/.test(KEY) ? 'live' : 'test'); // 本番キーは sk_live_（標準）か rk_live_（制限付き）
 let client = null;
 function stripe() {
   if (!KEY) return null;
