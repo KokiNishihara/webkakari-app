@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>炭火焼肉 くろ田｜デザイン例</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,500;0,700;1,500&family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0F0E0D;--ink:#EFE9E1;--sub:#A69C90;--line:#2A2724;--red:#911010;--gold:#C7A25A;--serif:"Bodoni Moda",serif;--min:"Shippori Mincho",serif;--got:"Zen Kaku Gothic New",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--got);line-height:1.85;letter-spacing:.04em}
+.demo{background:var(--gold);color:#0F0E0D;font-size:12px;text-align:center;padding:6px 16px;font-weight:500}
+header{position:absolute;top:30px;left:40px;right:40px;display:flex;justify-content:space-between;align-items:center;z-index:3}
+.logo{font-family:var(--min);font-weight:700;font-size:22px;letter-spacing:.2em}
+.logo small{display:block;font-family:var(--serif);font-size:11px;letter-spacing:.3em;color:var(--gold)}
+header a.r{color:var(--ink);border:1px solid var(--gold);padding:10px 22px;text-decoration:none;font-size:13px}
+.fv{position:relative;height:92vh;min-height:560px;background:#000 url("../assets/gen/rich-fv.jpg") 70% center/cover}
+.fv::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.75),rgba(0,0,0,.1) 55%)}
+.fv .c{position:absolute;left:40px;bottom:64px;z-index:2}
+.fv .en{font-family:var(--min);font-weight:700;font-size:clamp(34px,4.4vw,62px);line-height:1.45;letter-spacing:.08em;color:var(--ink)}
+.fv .jp{margin-top:18px;font-family:var(--min);font-size:18px;letter-spacing:.2em;color:var(--gold)}
+.fv .vt{position:absolute;right:48px;top:140px;z-index:2;writing-mode:vertical-rl;font-family:var(--min);font-size:16px;letter-spacing:.4em;color:var(--ink)}
+section{padding:120px 40px}
+.wrap{max-width:1080px;margin:0 auto}
+h2{font-family:var(--serif);font-weight:500;font-size:44px;line-height:1}
+h2 span{display:block;font-family:var(--min);font-size:14px;letter-spacing:.3em;color:var(--gold);margin-top:12px}
+.kodawari{display:grid;grid-template-columns:1fr 1.2fr;gap:72px;align-items:center}
+.kodawari p{color:var(--sub);font-size:15px;line-height:2.2;margin-top:28px}
+.kodawari .ph{aspect-ratio:4/5;background:url("../assets/gen/rich-sub.jpg") center/cover}
+.parts{border-top:1px solid var(--line)}
+.parts ul{list-style:none;margin-top:44px;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--gold)}
+.parts li{padding:24px 20px 20px 0;border-bottom:1px solid var(--line)}
+.parts li+li{padding-left:20px;border-left:1px solid var(--line)}
+.parts b{font-family:var(--min);font-size:20px}
+.parts i{display:block;font-style:normal;font-family:var(--serif);color:var(--gold);margin-top:6px}
+.course{background:#171513}
+.course .row{display:grid;grid-template-columns:1fr auto;padding:22px 0;border-bottom:1px solid var(--line);align-items:baseline;margin-top:0}
+.course .list{margin-top:40px;border-top:1px solid var(--line)}
+.course .row b{font-family:var(--min);font-size:19px}
+.course .row small{display:block;color:var(--sub);font-size:13px}
+.course .row span{font-family:var(--serif);font-size:24px;color:var(--gold)}
+.res{text-align:center}
+.res .b{margin-top:40px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.res a{padding:18px 44px;text-decoration:none;font-family:var(--min);border:1px solid var(--gold);color:var(--gold)}
+.res a.f{background:var(--red);border-color:var(--red);color:#fff}
+footer{text-align:center;padding:36px;font-size:12px;color:var(--sub);border-top:1px solid var(--line)}
+@media(max-width:760px){section{padding:80px 20px}header{left:20px;right:20px}.fv .c{left:20px}.fv .vt{display:none}.kodawari{grid-template-columns:1fr}.parts ul{grid-template-columns:1fr 1fr}.parts li+li{border-left:0;padding-left:0}}
+</style>
+</head>
+<body>
+<div class="demo">これは「飲食店のWeb係」のデザイン例です（架空の店舗・写真はAIで生成したイメージ）</div>
+<div class="fv">
+  <header><span class="logo">炭火焼肉 くろ田</span><a class="r" href="#">ご予約</a></header>
+  <div class="vt">黒毛和牛　一頭買い</div>
+  <div class="c"><p class="en">炭で焼く、<br>一頭買いの和牛。</p><p class="jp">鹿児島の契約牧場から</p></div>
+</div>
+<section><div class="wrap kodawari">
+  <div><h2>Kodawari<span>こだわり</span></h2><p>鹿児島の契約牧場から、黒毛和牛を一頭まるごと仕入れています。部位ごとに切り方と厚みを変え、紀州備長炭でさっと焼き上げてお出しします。</p></div>
+  <div class="ph" role="img" aria-label="網の上で焼ける肉"></div>
+</div></section>
+<section class="parts"><div class="wrap">
+  <h2>Cuts<span>本日の希少部位</span></h2>
+  <ul><li><b>ザブトン</b><i>¥2,800</i></li><li><b>ミスジ</b><i>¥2,600</i></li><li><b>シャトーブリアン</b><i>¥4,800</i></li><li><b>上タン塩</b><i>¥2,200</i></li></ul>
+</div></section>
+<section class="course"><div class="wrap">
+  <h2>Course<span>コース</span></h2>
+  <div class="list">
+    <div class="row"><div><b>くろ田コース</b><small>希少部位五種、季節の前菜、冷麺</small></div><span>¥9,800</span></div>
+    <div class="row"><div><b>特選コース</b><small>シャトーブリアン入り、全十品</small></div><span>¥15,000</span></div>
+  </div>
+</div></section>
+<section class="res"><div class="wrap">
+  <h2>Reservation<span>ご予約</span></h2>
+  <div class="b"><a class="f" href="#">WEBで予約する</a><a href="#">電話で予約する</a></div>
+</div></section>
+<footer>© 炭火焼肉 くろ田（デザイン例）</footer>
+</body>
+</html>

@@ -26,11 +26,46 @@ const APP_HOST = new URL(BASE_URL).host;
 // 死活確認（Render のヘルスチェック用）。DB が読めることまで確かめる
 app.get('/healthz', (req, res) => { try { one('SELECT 1 AS ok'); res.send('ok'); } catch { res.status(500).send('db error'); } });
 
+// 営業用のサービスサイト（院のWeb係・飲食店のWeb係）。SERVICE_DOMAIN_CLINIC / SERVICE_DOMAIN_FOOD のドメインで来たら返す。
+// 中身は scripts/sync-service-sites.mjs で service-sites/ に取り込んだもの。確認用に /service/clinic/・/service/food/ でも見られる
+const SERVICE_DIR = path.resolve('service-sites');
+const serviceDomains = () => Object.fromEntries([['clinic', process.env.SERVICE_DOMAIN_CLINIC], ['food', process.env.SERVICE_DOMAIN_FOOD]]
+  .filter(([, d]) => d).flatMap(([k, d]) => [[d.toLowerCase(), k], [`www.${d.toLowerCase()}`, k]]));
+function sendServiceSite(req, res, key, relPath, origin) {
+  const rel = decodeURIComponent(relPath).replace(/^\/+/, '') || 'index.html';
+  if (rel.includes('..')) return res.status(400).end();
+  const file = rel.endsWith('/') ? rel + 'index.html' : rel;
+  const full = path.join(SERVICE_DIR, key, file);
+  if (!full.startsWith(path.join(SERVICE_DIR, key)) || !existsSync(full)) return res.status(404).send(V.notFound());
+  if (file.endsWith('.html')) {
+    // OGP の画像は絶対URLでないとSNSで表示されないため、配信時に書き換える
+    const html = readFileSync(full, 'utf8').replace(/content="assets\//g, `content="${origin}/assets/`);
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    return res.type('html').send(html);
+  }
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(full);
+}
+app.use((req, res, next) => {
+  const host = String(req.headers.host || '').toLowerCase().split(':')[0];
+  const key = serviceDomains()[host];
+  if (!key) return next();
+  if (host.startsWith('www.')) return res.redirect(301, `https://${host.slice(4)}${req.originalUrl}`);
+  sendServiceSite(req, res, key, req.path, `https://${host}`);
+});
+app.get(['/service/:key', '/service/:key/*'], (req, res) => {
+  const key = ['clinic', 'food'].includes(req.params.key) ? req.params.key : null;
+  if (!key) return res.status(404).send(V.notFound());
+  if (!req.params[0] && !req.path.endsWith('/')) return res.redirect(`/service/${key}/`);
+  res.setHeader('X-Robots-Tag', 'noindex'); // 確認用のURLは検索に出さない
+  sendServiceSite(req, res, key, req.params[0] || '', BASE_URL + `/service/${key}`);
+});
+
 // お客さまの独自ドメインで来たアクセスは、そのお店のHP（公開中の版）を返す
 // 例：minato-shokudo.jp を DNS でこのサーバーに向け、管理画面の「独自ドメイン」に登録すると表示される
 app.use((req, res, next) => {
   const host = String(req.headers.host || '').toLowerCase().split(':')[0];
-  if (!host || host === APP_HOST.split(':')[0] || host === 'localhost' || host.endsWith('.onrender.com')) return next();
+  if (!host || host === APP_HOST.split(':')[0] || host === 'localhost' || host === '127.0.0.1' || host.endsWith('.onrender.com')) return next();
   const bare = host.replace(/^www\./, '');
   const site = one('SELECT * FROM sites WHERE domain = ? OR domain = ?', bare, host);
   if (!site?.live_version_id) return res.status(404).send(V.notFound());

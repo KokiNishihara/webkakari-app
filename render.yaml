@@ -35,6 +35,10 @@ services:
         sync: false
       - key: SITE_URL_CLINIC
         sync: false
+      - key: SERVICE_DOMAIN_CLINIC   # 院のWeb係のサイトのドメイン（決まったら）
+        sync: false
+      - key: SERVICE_DOMAIN_FOOD     # 飲食店のWeb係のサイトのドメイン（決まったら）
+        sync: false
       - key: CLOUDFLARE_ACCOUNT_ID
         sync: false
       - key: CLOUDFLARE_API_TOKEN

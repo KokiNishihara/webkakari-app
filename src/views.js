@@ -376,7 +376,7 @@ ${audits?.length ? `<details style="margin-top:12px"><summary class="hint">履�
 // 利用規約（Markdown の下書きをそのまま表示。見出し・箇条書き・段落だけ対応）
 export function termsPage(md, brand) {
   const body = md.replace(/^# .*\n/, '').replace(/^作成：.*\n/m, '').replace(/^---\s*$/m, '')
-    .replace(/院のWeb係/g, brand).replace(/^(## .*)$/gm, '\n$1\n')
+    .replace(/\{サービス名\}|院のWeb係/g, brand).replace(/^制定日：.*$/m, '').replace(/^株式会社プラチナ企画　.*$/m, '株式会社プラチナ企画　東京都港区白金台3-7-15').replace(/^(## .*)$/gm, '\n$1\n')
     .split(/\n{2,}/).map((blk) => {
       blk = blk.trim(); if (!blk) return '';
       if (blk.startsWith('## ')) return `<h2>${esc(blk.slice(3))}</h2>`;

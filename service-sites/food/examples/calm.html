@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>割烹 しのだ｜デザイン例</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2EEE6;--ink:#1F1A17;--sub:#5E5650;--line:#D9D1C4;--accent:#7A1E1E;--brown:#8C6B5F;--min:"Shippori Mincho",serif;--got:"Zen Kaku Gothic New",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--got);line-height:1.9;letter-spacing:.04em}
+.demo{background:var(--ink);color:#E8E1D6;font-size:12px;text-align:center;padding:6px 16px}
+header{position:absolute;top:30px;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:flex-start;padding:0 48px;color:#fff}
+.logo{font-family:var(--min);font-weight:700;font-size:20px;letter-spacing:.3em;writing-mode:vertical-rl;line-height:1.4}
+nav{display:flex;gap:28px;font-family:var(--min);font-size:14px}
+nav a{color:#fff;text-decoration:none}
+.fv{position:relative;height:88vh;min-height:560px;background:#2a221d url("../assets/gen/calm-fv.jpg") left center/cover}
+.fv::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(20,15,12,.15),rgba(20,15,12,.55))}
+.fv h1{position:absolute;right:12%;top:50%;transform:translateY(-50%);z-index:2;writing-mode:vertical-rl;font-family:var(--min);font-weight:600;font-size:clamp(28px,3.4vw,44px);color:#fff;letter-spacing:.32em;line-height:1.9}
+.fv p{position:absolute;left:48px;bottom:40px;z-index:2;color:#efe8de;font-family:var(--min);font-size:14px}
+section{padding:120px 0}
+.wrap{max-width:1040px;margin:0 auto;padding:0 32px}
+.intro{display:grid;grid-template-columns:auto 1fr;gap:72px;align-items:start}
+.vt{writing-mode:vertical-rl;font-family:var(--min);font-weight:600;font-size:30px;letter-spacing:.3em;line-height:1.8}
+.intro p{font-family:var(--min);font-size:16px;line-height:2.4;max-width:30em;margin-top:8px}
+.course{border-top:1px solid var(--line)}
+.course h2,.space h2,.info h2{font-family:var(--min);font-weight:600;font-size:24px;letter-spacing:.2em;margin-bottom:40px}
+.clist{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink)}
+.clist div{padding:28px 28px 8px 0}
+.clist div+div{padding-left:28px;border-left:1px solid var(--line)}
+.clist b{font-family:var(--min);font-size:20px;font-weight:600}
+.clist .yen{display:block;font-family:var(--min);color:var(--accent);font-size:18px;margin:6px 0 10px}
+.clist p{font-size:13px;color:var(--sub)}
+.space .grid{display:grid;grid-template-columns:1.3fr 1fr;gap:48px;align-items:center}
+.space .ph{aspect-ratio:4/3;background:url("../assets/gen/calm-sub.jpg") center/cover}
+.space p{font-size:15px;color:var(--sub);line-height:2.2}
+.chef{background:#E9E3D8}
+.chef blockquote{font-family:var(--min);font-size:20px;line-height:2.2;max-width:32em;margin:0 auto;text-align:center}
+.chef cite{display:block;margin-top:24px;font-style:normal;font-size:13px;color:var(--sub);text-align:center}
+.info dl div{display:grid;grid-template-columns:140px 1fr;padding:16px 0;border-bottom:1px solid var(--line);font-size:14px}
+.info dt{font-family:var(--min);color:var(--sub)}
+.res{display:flex;gap:12px;margin-top:40px;flex-wrap:wrap}
+.res a{display:inline-block;padding:16px 40px;font-family:var(--min);text-decoration:none;border:1px solid var(--ink);color:var(--ink)}
+.res a.f{background:var(--accent);border-color:var(--accent);color:#fff}
+footer{text-align:center;padding:40px;font-size:12px;color:var(--sub)}
+@media(max-width:760px){header{padding:0 20px}nav{display:none}.fv h1{right:8%}.intro{grid-template-columns:1fr;gap:24px}.vt{writing-mode:horizontal-tb}.clist,.space .grid{grid-template-columns:1fr}.clist div+div{border-left:0;padding-left:0;border-top:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="demo">これは「飲食店のWeb係」のデザイン例です（架空の店舗・写真はAIで生成したイメージ）</div>
+<div class="fv">
+  <header><span class="logo">割烹 しのだ</span><nav><a href="#">お献立</a><a href="#">お部屋</a><a href="#">店舗情報</a><a href="#">ご予約</a></nav></header>
+  <h1>季節を、ひと皿ずつ。</h1>
+  <p>東京・神楽坂　昼十二時より／夜十七時半より</p>
+</div>
+<section><div class="wrap intro">
+  <h2 class="vt">しのだの料理</h2>
+  <p>朝、市場で目にとまったものから、その日の献立を決めます。<br>旬の魚と京野菜を、器と一緒に味わっていただけるよう、一品ずつ間を置いてお出ししています。<br>カウンター八席と、個室がふたつの小さな店です。</p>
+</div></section>
+<section class="course"><div class="wrap">
+  <h2>お献立</h2>
+  <div class="clist">
+    <div><b>昼の松花堂</b><span class="yen">四千八百円</span><p>八寸、お造り、焚合せ、炊き込みご飯。</p></div>
+    <div><b>季節のおまかせ</b><span class="yen">一万二千円</span><p>先付から甘味まで全九品。</p></div>
+    <div><b>しのだ会席</b><span class="yen">一万八千円</span><p>個室のみ。前日までのご予約で。</p></div>
+  </div>
+</div></section>
+<section class="space"><div class="wrap grid">
+  <div class="ph" role="img" aria-label="カウンター"></div>
+  <div><h2>お部屋</h2><p>白木のカウンターでは、料理長の手元をご覧いただけます。接待や顔合わせには、四名様と八名様の個室をご用意しています。</p></div>
+</div></section>
+<section class="chef"><div class="wrap">
+  <blockquote>器を選ぶところから、料理は始まっていると思っています。</blockquote>
+  <cite>料理長　篠田 仁</cite>
+</div></section>
+<section class="info"><div class="wrap">
+  <h2>店舗情報</h2>
+  <dl>
+    <div><dt>住所</dt><dd>東京都新宿区神楽坂 〇-〇-〇</dd></div>
+    <div><dt>営業時間</dt><dd>昼 12:00–14:00／夜 17:30–22:00</dd></div>
+    <div><dt>定休日</dt><dd>日曜日・祝日</dd></div>
+    <div><dt>お席</dt><dd>カウンター8席／個室2室</dd></div>
+  </dl>
+  <div class="res"><a class="f" href="#">WEBで予約する</a><a href="#">電話で予約する</a></div>
+</div></section>
+<footer>© 割烹 しのだ（デザイン例）</footer>
+</body>
+</html>
