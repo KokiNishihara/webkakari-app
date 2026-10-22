@@ -46,6 +46,15 @@ export const mails = {
     to: c.email, subject: `【${brand(c)}】ホームページに反映しました`,
     text: `${c.contact_name}様\n\nご依頼の変更を、ホームページに反映しました。\n${url}\n\nまた変えたいことがあれば、マイページからお気軽にお送りください。`,
   }),
+  payLink: (c, url, q) => ({
+    to: c.email, subject: `【${brand(c)}】お申し込み内容とお支払いのご案内`,
+    text: `${c.contact_name}様\n\nご相談いただいた内容で、お申し込みの準備ができました。\n下のリンクから内容をご確認のうえ、お支払い方法（クレジットカード）をご登録ください（14日間有効です）。\n${url}\n\n月額：${q.monthlyTotal.toLocaleString()}円（税込）${q.oneTimeTotal ? `\n初回のみ：${q.oneTimeTotal.toLocaleString()}円（税込）` : ''}\n\nカード番号はStripe（決済代行会社）の画面で入力していただき、当社には届きません。\nカードでのお支払いが難しい場合は、このメールにご返信ください。`,
+  }),
+  paymentFailed: (c, url) => ({
+    to: c.email, subject: `【${brand(c)}】月額のお支払いができませんでした`,
+    text: `${c.contact_name}様\n\nご登録のカードで、今月のお支払いができませんでした。\nカードの有効期限が切れている場合などに起こります。\n\n下のリンク（マイページ → お支払い情報）から、カードを登録し直してください。\n${url}\n\nご不明な点は、このメールにご返信ください。`,
+  }),
+  adminNotice: (subject, url) => ({ to: process.env.ADMIN_NOTIFY_EMAIL || 'nishihara@platinum-kikaku.co.jp', subject, text: `管理画面で確認してください。\n${url}` }),
   reply: (c, url) => ({
     to: c.email, subject: `【${brand(c)}】担当者からご連絡があります`,
     text: `${c.contact_name}様\n\nご依頼について、担当者からご連絡しました。\nマイページでご確認ください。\n${url}`,

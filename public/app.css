@@ -147,3 +147,108 @@ table.t{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;o
 .status-card .preview-link svg,.actions .preview-link svg{margin:0;max-width:none;width:20px;height:20px}
 .copy .btn{white-space:nowrap;flex:0 0 auto}
 .auth h1,.hello h1{text-wrap:balance}
+
+/* ---------- お支払い ---------- */
+.narrow{max-width:640px}
+.page-h{font-family:var(--kaku);font-size:24px;margin:8px 0 6px}
+.lead-l{color:var(--text-2);margin-bottom:16px}
+.bill{width:100%;border-collapse:collapse;font-size:15px}
+.bill td,.bill th{padding:10px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.bill .grp th{padding-top:18px;font-size:13px;color:var(--text-3);font-weight:700;border-bottom:0}
+.bill .n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;padding-left:12px}
+.bill small{display:block;color:var(--text-3);font-size:12.5px}
+.bill .sum td{font-weight:700;border-bottom:2px solid var(--text)}
+.facts{margin-top:16px;display:grid;gap:8px;font-size:14.5px}
+.facts div{display:grid;grid-template-columns:8.5em 1fr;gap:8px}.facts dt{color:var(--text-3)}
+.agree{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:14.5px}
+.agree input{margin-top:5px;width:18px;height:18px;flex:none}
+.flow{padding-left:1.3em;display:grid;gap:6px;margin-top:8px;color:var(--text-2);font-size:14.5px}
+.states{display:grid;gap:6px;font-size:13.5px}.states div{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}.states span{width:7em;color:var(--text-3)}
+.checks{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14.5px}
+.line{display:grid;grid-template-columns:1fr 8em auto;gap:8px;margin-top:6px}.line .n{text-align:right}
+.line:not(:has(button)){grid-template-columns:1fr 8em}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.sub-h{font-size:15px;margin:22px 0 4px}
+.legal h2{font-size:17px;margin:26px 0 8px}.legal p,.legal li{font-size:15px;color:var(--text-2)}.legal ol{padding-left:1.4em;display:grid;gap:4px}.legal ul{padding-left:1.2em}
+.pv{margin-top:16px}
+.pv-tabs{display:flex;gap:4px;margin-bottom:8px}
+.pv-tabs button{flex:1;padding:10px;border:1px solid var(--line);background:#fff;border-radius:8px;font:inherit;font-size:14px;color:var(--text-2);cursor:pointer}
+.pv-tabs button[aria-selected="true"]{border-color:var(--sky);color:var(--sky-d);font-weight:700}
+.pv-frame{overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#fff;display:flex;justify-content:center}
+.pv-frame iframe{border:0;transform-origin:top center;flex:none}
+.diff .before,.diff .after{white-space:pre-line}
+
+/* ===== 2026-10-22 見た目の見直し：AIっぽさを減らす =====
+   ・書体：本文と操作部品は端末の標準ゴシック（iPhone/Mac=ヒラギノ、Windows=游ゴシック）。見出しだけ明朝
+   ・丸すぎる角・ふわっとした影・丸いピル型の部品・字間の空けすぎをやめ、線と余白で整理する */
+:root{
+  --sys:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP","Noto Sans CJK JP",sans-serif;
+  --mincho:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif; --kaku:var(--sys); --sans:var(--sys);
+  letter-spacing:0; line-height:1.75;
+}
+body{background:#F4F9FC}
+.card{border-radius:10px;box-shadow:none;border:1px solid var(--line);padding:20px}
+.btn{border-radius:8px;min-height:50px;font-weight:600;letter-spacing:0}
+.btn.ghost{border-width:1px;border-color:var(--line-2)}
+.btn.danger{border-width:1px}
+.input,.composer textarea{border-width:1px;border-radius:8px}
+.input:focus,.composer textarea:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(30,155,215,.15)}
+label.f{font-weight:600}
+.top{background:#fff;backdrop-filter:none}
+.brand{font-weight:700;letter-spacing:.04em}
+
+/* ホーム */
+.hello h1,.auth h1{font-family:var(--mincho);font-weight:700;font-size:23px}
+.hello p,.auth .lead{color:var(--text-2)}
+.sec-h{font-weight:600;font-size:14px;color:var(--text-2);margin:28px 0 8px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.req-list{gap:0;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.req-list .req{border:0;border-radius:0;border-bottom:1px solid var(--line);padding:14px 16px}
+.req-list .req:last-child{border-bottom:0}
+.req-list .req:hover{background:#FAFCFE}
+.req b{font-family:var(--sys)!important;font-weight:600;font-size:15px}
+.site-card .ico{border-radius:8px}
+.site-card b{font-weight:600}
+
+/* 状態の表示：ピル型・点をやめて、文字色と細い下地だけ */
+.badge{border-radius:4px;padding:1px 8px;font-weight:600;font-size:12px}
+.badge::before{display:none}
+
+/* 入力欄 */
+.composer{box-shadow:0 -1px 0 var(--line)}
+.chips{align-items:center;gap:6px}
+.chips-h{flex:0 0 auto;font-size:12px;color:var(--text-3);margin-right:2px}
+.chip{border:1px solid var(--line-2);border-radius:6px;padding:5px 11px;font-weight:500;font-size:13px;color:var(--text-2);background:#fff}
+.chip:hover{border-color:var(--sky);color:var(--sky-d);background:#fff}
+.attach{border-width:1px;border-radius:8px}
+.send{border-radius:8px}
+
+/* 進みぐあい：丸とチェックの並びをやめ、細い線と文字だけ */
+.steps{display:flex;gap:0;margin:2px 0 18px;counter-reset:none}
+.steps li{flex:1;text-align:left;padding:8px 0 0;font-weight:600;font-size:12.5px;border-top:3px solid var(--line);margin-right:4px}
+.steps li::before,.steps li::after{display:none}
+.steps li.done{border-top-color:var(--sky);color:var(--text-2)}
+.steps li.on{border-top-color:var(--sky);color:var(--sky-d)}
+
+/* やり取り */
+.bub{border-radius:12px}
+.bub.me{border-bottom-right-radius:4px}
+.bub.us{border-bottom-left-radius:4px}
+.review h2,.status-card b{font-family:var(--sys);font-weight:600}
+.diff li{border-radius:8px}
+.diff .lbl{font-weight:600;color:var(--text-3)}
+.ld{margin-top:6px;font-size:15px}
+.ld .same{color:var(--text-2)}
+.ld .add{color:var(--text);font-weight:600;background:linear-gradient(transparent 62%,rgba(30,155,215,.18) 0)}
+.ld .before{margin-top:0}
+.warn{border-radius:8px}
+.preview-link{border-radius:8px;font-weight:600;background:#fff;border:1px solid var(--line-2)}
+.pv-tabs button{border-radius:6px}
+.pv-frame{border-radius:8px}
+
+/* 管理画面 */
+.kpi,table.t{border-radius:8px}
+.admin h1,.page-h{font-family:var(--sys);font-weight:700}
+.ld .add{width:fit-content}
+.req b{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.hello p{text-wrap:pretty;word-break:auto-phrase}
+@media (max-width:480px){.hello{grid-template-columns:1fr 84px}.hello p{font-size:13.5px}}

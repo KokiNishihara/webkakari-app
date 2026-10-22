@@ -23,6 +23,18 @@ services:
         sync: false          # 例：https://webkakari-app.onrender.com（独自ドメインにしたら変更）
       - key: ANTHROPIC_API_KEY
         sync: false          # 西原さんがRenderの画面で入力
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_ALLOW_LIVE
+        sync: false
+      - key: ADMIN_NOTIFY_EMAIL
+        sync: false
+      - key: SITE_URL_FOOD
+        sync: false
+      - key: SITE_URL_CLINIC
+        sync: false
       - key: CLOUDFLARE_ACCOUNT_ID
         sync: false
       - key: CLOUDFLARE_API_TOKEN

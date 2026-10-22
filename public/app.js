@@ -91,3 +91,18 @@
     }
   });
 })();
+
+// 直したあとの画面を、スマホ幅・パソコン幅で切り替えて見る（パソコン幅は縮小して収める）
+(() => {
+  const pv = document.querySelector('[data-pv]'); if (!pv) return;
+  const frame = pv.querySelector('iframe'), box = pv.querySelector('.pv-frame');
+  const set = (w) => {
+    pv.querySelectorAll('[data-pv-w]').forEach((b) => b.setAttribute('aria-selected', String(Number(b.dataset.pvW) === w)));
+    const k = Math.min(1, box.clientWidth / w);
+    frame.style.width = w + 'px'; frame.style.height = Math.round(560 / k) + 'px';
+    frame.style.transform = `scale(${k})`; box.style.height = '560px';
+  };
+  pv.querySelectorAll('[data-pv-w]').forEach((b) => b.addEventListener('click', () => set(Number(b.dataset.pvW))));
+  addEventListener('resize', () => set(Number(pv.querySelector('[aria-selected="true"]').dataset.pvW)));
+  set(390);
+})();

@@ -98,6 +98,12 @@ CREATE TABLE IF NOT EXISTS tokens (    -- 初回パスワード設定・再設�
   used_at INTEGER
 );
 
+-- 小さな設定値（Stripeの商品IDなど）
+CREATE TABLE IF NOT EXISTS settings (
+  k TEXT PRIMARY KEY,
+  v TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS audit_log (
   id INTEGER PRIMARY KEY,
   actor TEXT NOT NULL,
@@ -115,7 +121,20 @@ export const audit = (actor, action, detail = '') =>
   run('INSERT INTO audit_log (actor, action, detail, created_at) VALUES (?,?,?,?)', actor, action, String(detail), now());
 
 // 追加の列（既存DBにも安全に足す）
-for (const [table, col, def] of [['admins', 'totp_secret', 'TEXT']]) {
+for (const [table, col, def] of [
+  ['admins', 'totp_secret', 'TEXT'],
+  ['customers', 'billing_json', 'TEXT'],          // 料金の条件（商品・追加・値引き・初期費用）
+  ['customers', 'state_codes', 'TEXT'],           // 契約前の状態（社内用の状態別プラン表の記号 例：A3,B1,C1）
+  ['customers', 'stripe_customer_id', 'TEXT'],
+  ['customers', 'stripe_subscription_id', 'TEXT'],
+  ['customers', 'billed_json', 'TEXT'],           // いまStripeで請求している内容（変更の差分確認用）
+  ['customers', 'terms_agreed_at', 'INTEGER'],    // 利用規約・特商法への同意（決済画面で記録）
+  ['customers', 'pending_quote_json', 'TEXT'],
+  ['requests', 'admin_flag', 'INTEGER NOT NULL DEFAULT 0'],  // 一部だけ自動でできた依頼（担当者の対応が残っている）    // 決済リンクを送った時点の見積り（決済完了でこの内容を請求中にする）
+]) {
   const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
   if (!cols.includes(col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
 }
+
+export const getSetting = (k) => one('SELECT v FROM settings WHERE k = ?', k)?.v ?? null;
+export const setSetting = (k, v) => run('INSERT INTO settings (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v', k, String(v));

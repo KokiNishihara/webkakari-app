@@ -9,6 +9,9 @@ import * as V from './views.js';
 import { sendMail, mails } from './mail.js';
 import { newSecret, verifyTotp, otpauthUrl } from './totp.js';
 import QRCode from 'qrcode';
+import sharp from 'sharp';
+import { computeQuote, readBillingForm } from './pricing.js';
+import { stripeMode, startCheckout, syncCheckout, markPaid, portalUrl, applyToSubscription, addOneTimeCharge, verifyWebhook, handleEvent } from './billing.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 4900);
@@ -16,6 +19,20 @@ const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const MAX_REQUESTS_PER_HOUR = 20; // AI費用の暴走を防ぐ
 
 app.disable('x-powered-by');
+
+// Stripe からの通知は、署名の確認のため加工前の本文で受け取る（JSONの読み込みより前に置く）
+app.post('/stripe/webhook', express.raw({ type: 'application/json', limit: '1mb' }), (req, res) => {
+  let event;
+  try { event = verifyWebhook(req.body, req.headers['stripe-signature']); }
+  catch (e) { console.warn('[Stripe通知の確認に失敗]', e.message); return res.status(400).send('invalid'); }
+  try { handleEvent(event, { onPaymentFailed: notifyPaymentFailed }); } catch (e) { console.error('[Stripe通知の処理に失敗]', e); }
+  res.json({ received: true });
+});
+function notifyPaymentFailed(c) {
+  sendMail(mails.paymentFailed(c, `${BASE_URL}/app/billing`));
+  sendMail(mails.adminNotice(`【要確認】${c.business_name} の月額の決済に失敗しました`, `${BASE_URL}/admin/customers/${c.id}`));
+}
+
 app.use(express.urlencoded({ extended: false, limit: '6mb' }));
 app.use(express.json({ limit: '8mb' }));
 app.use('/static', express.static(path.resolve('public'), { maxAge: '1h' }));
@@ -130,45 +147,59 @@ app.get('/app/r/:id/status', requireCustomer, (req, res) => {
   res.json({ status: r.status });
 });
 
-function saveImage(site, dataUrl) {
+// 写真は受け取った時点で ①向きを直す ②位置情報などの撮影データを消す ③大きすぎるものは縮める
+async function saveImage(site, dataUrl) {
   if (!dataUrl) return null;
   const m = /^data:image\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
   if (!m) throw new Error('写真の形式に対応していません（JPEGかPNGでお送りください）');
-  const buf = Buffer.from(m[2], 'base64');
-  if (buf.length > 5 * 1024 * 1024) throw new Error('写真が大きすぎます');
+  const raw = Buffer.from(m[2], 'base64');
+  if (raw.length > 5 * 1024 * 1024) throw new Error('写真が大きすぎます');
+  let buf, meta;
+  try {
+    buf = await sharp(raw).rotate().resize({ width: 2400, height: 2400, fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 85, mozjpeg: true }).toBuffer();
+    meta = await sharp(buf).metadata();
+  } catch { throw new Error('写真を読み込めませんでした。別の写真でお試しください'); }
   const dir = path.join(SITES_DIR, site.slug, 'uploads'); mkdirSync(dir, { recursive: true });
-  const name = `${now()}-${newToken().slice(0, 8)}.${m[1] === 'png' ? 'png' : 'jpg'}`;
+  const name = `${now()}-${newToken().slice(0, 8)}.jpg`;
   writeFileSync(path.join(dir, name), buf);
-  return { name, buffer: buf, url: `/u/${site.slug}/${name}` };
+  return { name, buffer: buf, url: `/u/${site.slug}/${name}`, width: meta.width, height: meta.height };
 }
 
-function addCustomerMessage(c, site, r, body) {
+// HPの写真の場所に合わせて、幅をそろえて軽くする（表示が速く、どの写真も同じ見え方になる）
+async function fitImageForSlot(buf, slotWidth) {
+  const meta = await sharp(buf).metadata();
+  const out = await sharp(buf).resize({ width: slotWidth, withoutEnlargement: true }).jpeg({ quality: 80, mozjpeg: true, progressive: true }).toBuffer();
+  return { buffer: out, small: meta.width < slotWidth * 0.6, width: meta.width };
+}
+
+async function addCustomerMessage(c, site, r, body) {
   const text = String(body.text || '').slice(0, 2000);
   if (!text && !body.image) throw new Error('変えたいことを書いてください');
   const recent = one(`SELECT COUNT(*) n FROM messages m JOIN requests r ON r.id = m.request_id WHERE r.customer_id = ? AND m.sender = 'customer' AND m.created_at > ?`, c.id, now() - 3600000).n;
   if (recent >= MAX_REQUESTS_PER_HOUR) throw new Error('短い時間にたくさんのご依頼をいただいたため、少し時間をおいてお送りください');
-  const img = saveImage(site, body.image);
+  const img = await saveImage(site, body.image);
   run('INSERT INTO messages (request_id, sender, body, image_path, created_at) VALUES (?,?,?,?,?)', r.id, 'customer', text || '（写真を送りました）', img?.url || null, now());
   run('UPDATE requests SET status = ?, updated_at = ? WHERE id = ?', 'working', now(), r.id);
   setImmediate(() => processRequest(r.id).catch((e) => failRequest(r.id, e)));
 }
 
-app.post('/app/requests', requireCustomer, (req, res) => {
+app.post('/app/requests', requireCustomer, async (req, res) => {
   const c = req.customer;
   const site = one('SELECT * FROM sites WHERE customer_id = ?', c.id);
   if (!site || !site.live_version_id) return res.status(400).json({ error: 'ホームページの準備がまだ整っていません。担当者からのご連絡をお待ちください' });
   try {
     const info = run('INSERT INTO requests (customer_id, site_id, status, created_at, updated_at) VALUES (?,?,?,?,?)', c.id, site.id, 'working', now(), now());
     const r = one('SELECT * FROM requests WHERE id = ?', Number(info.lastInsertRowid));
-    addCustomerMessage(c, site, r, req.body);
+    try { await addCustomerMessage(c, site, r, req.body); }
+    catch (e) { run('DELETE FROM requests WHERE id = ?', r.id); throw e; }
     res.json({ redirect: `/app/r/${r.id}` });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
-app.post('/app/r/:id/messages', requireCustomer, (req, res) => {
+app.post('/app/r/:id/messages', requireCustomer, async (req, res) => {
   const r = ownRequest(req); if (!r) return res.status(404).json({ error: '見つかりません' });
   if (['published', 'discarded'].includes(r.status)) return res.status(400).json({ error: 'このご依頼は完了しています。新しくお送りください' });
   const site = one('SELECT * FROM sites WHERE id = ?', r.site_id);
-  try { addCustomerMessage(req.customer, site, r, req.body); res.json({ redirect: `/app/r/${r.id}` }); }
+  try { await addCustomerMessage(req.customer, site, r, req.body); res.json({ redirect: `/app/r/${r.id}` }); }
   catch (e) { res.status(400).json({ error: e.message }); }
 });
 app.post('/app/r/:id/publish', requireCustomer, async (req, res) => {
@@ -202,25 +233,44 @@ async function processRequest(requestId) {
     run('INSERT INTO messages (request_id, sender, body, created_at) VALUES (?,?,?,?)', r.id, 'system', p.question, now());
     return run('UPDATE requests SET status = ?, updated_at = ? WHERE id = ?', 'waiting_customer', now(), r.id);
   }
-  if (p.needs_admin || !p.changes.length) {
+  const listChanges = p.list_changes || [];
+  // 書き直しても長さ・件数の決まりに収まらないものは、デザインが崩れるので担当者に回す
+  const layoutIssues = (p.style_issues || []).filter((x) => /長すぎ|件まで|空です|空には|改行が多すぎ/.test(x));
+  const hasChanges = p.changes.length || listChanges.length;
+  if ((p.needs_admin && !hasChanges) || !hasChanges || layoutIssues.length) {
     run('INSERT INTO messages (request_id, sender, body, created_at) VALUES (?,?,?,?)', r.id, 'system', 'ありがとうございます。このご依頼は担当者が確認して、1営業日以内にご連絡します。', now());
-    audit('ai', 'needs-admin', `request=${r.id} ${p.admin_reason}`);
+    audit('ai', 'needs-admin', `request=${r.id} ${p.admin_reason || ''} ${layoutIssues.join(' / ')}`);
     return run('UPDATE requests SET status = ?, updated_at = ? WHERE id = ?', 'needs_admin', now(), r.id);
   }
-  const extraFiles = [];
-  if (lastImg && p.changes.some((x) => x.new_value === attached)) {
-    const buf = (await import('node:fs')).readFileSync(path.join(SITES_DIR, site.slug, 'uploads', path.basename(lastImg.image_path)));
-    extraFiles.push({ relPath: attached, buffer: buf });
+  if (p.needs_admin) { // 一部だけ自動でできた：できた分は確認画面へ、残りは担当者へ
+    audit('ai', 'needs-admin-partial', `request=${r.id} ${p.admin_reason || ''}`);
+    run('UPDATE requests SET admin_flag = 1 WHERE id = ?', r.id);
+    sendMail(mails.adminNotice(`【一部対応が必要】${c.business_name} のご依頼`, `${BASE_URL}/admin/r/${r.id}`));
   }
-  const newHtml = applyChanges(html, p.changes);
+  if (p.style_issues?.length) audit('ai', 'style-issues', `request=${r.id} ${p.style_issues.join(' / ')}`);
+  const extraFiles = [];
+  const notes = [];
+  if (lastImg && p.changes.some((x) => x.new_value === attached)) {
+    const src = readFileSync(path.join(SITES_DIR, site.slug, 'uploads', path.basename(lastImg.image_path)));
+    const slot = regions.find((x) => x.type === 'image' && p.changes.some((ch) => ch.key === x.key && ch.new_value === attached));
+    const fitted = await fitImageForSlot(src, slot?.width || 1600);
+    if (fitted.small) notes.push('お送りいただいた写真が小さめのため、画面によっては少し粗く見えるかもしれません。気になる場合は、元の大きさの写真をお送りください。');
+    extraFiles.push({ relPath: attached, buffer: fitted.buffer });
+  }
+  const newHtml = applyChanges(html, p.changes, listChanges);
   const vid = createVersion({ site, parentId: baseVersion, html: newHtml, note: p.summary, createdBy: 'ai', requestId: r.id, extraFiles });
   const before = Object.fromEntries(regions.map((x) => [x.key, x]));
-  const diffs = p.changes.map((x) => ({
-    key: x.key, label: before[x.key]?.label || x.key, type: before[x.key]?.type || 'text',
-    before: before[x.key]?.value || '', after: x.new_value,
-    after_url: before[x.key]?.type === 'image' ? `/p/${site.slug}/v${vid}/${x.new_value}` : undefined,
-  }));
-  const warnings = [...new Set([...(p.guideline_warnings || []), ...guidelineCheck(c.business_type, p.changes)])];
+  const listText = (region, items) => items.map((it) => region.fields.map((f) => it[f.name] ?? '').join('　')).join('\n');
+  const diffs = [
+    ...p.changes.map((x) => ({
+      key: x.key, label: before[x.key]?.label || x.key, type: before[x.key]?.type || 'text',
+      before: before[x.key]?.value || '', after: x.new_value,
+      after_url: before[x.key]?.type === 'image' ? `/p/${site.slug}/v${vid}/${x.new_value}` : undefined,
+    })),
+    ...listChanges.map((l) => ({ key: l.key, label: before[l.key].label, type: 'list', before: listText(before[l.key], before[l.key].items), after: listText(before[l.key], l.items) })),
+  ];
+  if (p.needs_admin && p.customer_note) notes.unshift(p.customer_note);
+  const warnings = [...new Set([...(p.guideline_warnings || []), ...guidelineCheck(c.business_type, p.changes, listChanges), ...notes])];
   run('INSERT INTO messages (request_id, sender, body, data, created_at) VALUES (?,?,?,?,?)', r.id, 'system',
     '直したあとの画面ができました。内容を確かめて、よろしければ「公開する」を押してください。', JSON.stringify({ summary: p.summary, diffs, warnings, mock: !!p.mock }), now());
   run('UPDATE requests SET status = ?, preview_version_id = ?, summary = ?, updated_at = ? WHERE id = ?', 'review', vid, p.summary, now(), r.id);
@@ -256,6 +306,129 @@ app.get('/u/:slug/:name', (req, res) => {
   const cs = readSession(req.cookies.sid, 'customer'), as = readSession(req.cookies.asid, 'admin');
   if (!site || !(as || (cs && cs.user_id === site.customer_id))) return res.status(404).end();
   res.sendFile(path.basename(req.params.name), { root: path.join(SITES_DIR, site.slug, 'uploads'), dotfiles: 'deny' });
+});
+
+
+// ================= 規約・特商法・プライバシーポリシー（決済画面から開く） =================
+app.get('/legal/:brand/:file', (req, res) => {
+  const brand = req.params.brand === 'clinic' ? 'clinic' : req.params.brand === 'food' ? 'food' : null;
+  if (!brand) return res.status(404).send(V.notFound());
+  if (req.params.file === 'terms.html') return res.send(V.termsPage(readFileSync(path.resolve('legal/terms.md'), 'utf8'), brand === 'clinic' ? '院のWeb係' : '飲食店のWeb係'));
+  if (!['tokushoho.html', 'privacy.html'].includes(req.params.file)) return res.status(404).send(V.notFound());
+  const html = readFileSync(path.resolve('legal', brand, req.params.file), 'utf8')
+    .replace(/href="index.html"/g, `href="${process.env[brand === 'clinic' ? 'SITE_URL_CLINIC' : 'SITE_URL_FOOD'] || '#'}"`);
+  res.send(html);
+});
+
+// ================= お支払い =================
+// 管理画面で決めた見積り → お客さまに決済リンクを送る → Stripeの画面でカード入力 → 戻ってきたら契約者DBに反映
+const quoteOf = (c) => computeQuote(c.billing_json ? JSON.parse(c.billing_json) : null, c.business_type);
+function validPayToken(token) {
+  const t = validToken(token);
+  return t && t.purpose === 'pay' ? t : null;
+}
+app.get('/pay/:token', (req, res) => {
+  const t = validPayToken(req.params.token);
+  if (!t) return res.status(404).send(V.payExpired());
+  const c = one('SELECT * FROM customers WHERE id = ?', t.customer_id);
+  const quote = JSON.parse(c.pending_quote_json || 'null');
+  if (!quote) return res.status(404).send(V.payExpired());
+  res.send(V.payPage({ c, quote, token: t.token, mode: stripeMode(), flash: takeFlash(req, res) }));
+});
+app.post('/pay/:token', async (req, res) => {
+  const t = validPayToken(req.params.token);
+  if (!t) return res.status(404).send(V.payExpired());
+  const c = one('SELECT * FROM customers WHERE id = ?', t.customer_id);
+  const quote = JSON.parse(c.pending_quote_json || 'null');
+  if (!req.body.agree) { setFlash(res, 'err', '利用規約と特定商取引法に基づく表記をご確認のうえ、チェックを入れてください'); return res.redirect(`/pay/${t.token}`); }
+  run('UPDATE customers SET terms_agreed_at = ? WHERE id = ?', now(), c.id);
+  audit(`customer:${c.id}`, 'terms-agreed', `token=${t.token.slice(0, 6)}`);
+  try {
+    const r = await startCheckout(c, quote, { successUrl: `${BASE_URL}/pay/${t.token}/done`, cancelUrl: `${BASE_URL}/pay/${t.token}` });
+    if (r.mock) { // 仮の決済：Stripe未設定のときは、そのまま完了扱いにして流れを確認する
+      markPaid(c.id, { quote });
+      run('UPDATE tokens SET used_at = ? WHERE token = ?', now(), t.token);
+      audit(`customer:${c.id}`, 'paid-mock');
+      return res.send(V.payDone({ c, quote, mock: true }));
+    }
+    res.redirect(303, r.url);
+  } catch (e) {
+    console.error('[決済画面の作成に失敗]', e);
+    setFlash(res, 'err', 'お支払い画面を開けませんでした。時間をおいてお試しいただくか、担当者にご連絡ください');
+    res.redirect(`/pay/${t.token}`);
+  }
+});
+app.get('/pay/:token/done', async (req, res) => {
+  const t = one('SELECT * FROM tokens WHERE token = ? AND purpose = ?', req.params.token, 'pay');
+  if (!t) return res.status(404).send(V.payExpired());
+  const c = one('SELECT * FROM customers WHERE id = ?', t.customer_id);
+  const quote = JSON.parse(c.pending_quote_json || 'null');
+  try {
+    const s = req.query.session_id ? await syncCheckout(String(req.query.session_id)) : null;
+    if (!s || s.customerId !== c.id) return res.redirect(`/pay/${t.token}`);
+    markPaid(c.id, { stripeCustomerId: s.stripeCustomerId, subscriptionId: s.subscriptionId, quote });
+    run('UPDATE tokens SET used_at = COALESCE(used_at, ?) WHERE token = ?', now(), t.token);
+    audit(`customer:${c.id}`, 'paid', s.subscriptionId);
+    sendMail(mails.adminNotice(`【決済完了】${c.business_name}（月額 ${quote.monthlyTotal.toLocaleString()}円）`, `${BASE_URL}/admin/customers/${c.id}`));
+    res.send(V.payDone({ c, quote }));
+  } catch (e) { console.error('[決済の確認に失敗]', e); res.send(V.payDone({ c, quote, pending: true })); }
+});
+// マイページ → お支払い情報（カードの変更・領収書）
+app.get('/app/billing', requireCustomer, async (req, res) => {
+  const c = req.customer;
+  try {
+    const url = await portalUrl(c, `${BASE_URL}/app`);
+    if (url) return res.redirect(303, url);
+  } catch (e) { console.error('[お支払い画面の作成に失敗]', e); }
+  res.send(V.billingInfoPage({ c, quote: c.billed_json ? JSON.parse(c.billed_json) : null, mode: stripeMode() }));
+});
+
+// 管理：料金の条件を保存
+app.post('/admin/customers/:id/billing', requireAdmin, (req, res) => {
+  const c = one('SELECT * FROM customers WHERE id = ?', Number(req.params.id)); if (!c) return res.status(404).send(V.notFound());
+  const billing = readBillingForm(req.body);
+  const states = [].concat(req.body.state ?? []).map(String).filter((x) => /^[A-E]\d$/.test(x)).join(',');
+  run('UPDATE customers SET billing_json = ?, state_codes = ? WHERE id = ?', JSON.stringify(billing), states, c.id);
+  const q = computeQuote(billing, c.business_type);
+  if (!c.stripe_subscription_id) run('UPDATE customers SET monthly_fee = ?, plan = ? WHERE id = ?', q.monthlyTotal, q.planCode, c.id);
+  audit(`admin:${req.admin.id}`, 'billing-save', c.id);
+  setFlash(res, q.problems.length ? 'err' : 'ok', q.problems.length ? q.problems.join('／') : '料金の条件を保存しました');
+  res.redirect(`/admin/customers/${c.id}#billing`);
+});
+// 管理：決済リンクを作ってお客さまに送る（14日間有効）
+app.post('/admin/customers/:id/paylink', requireAdmin, (req, res) => {
+  const c = one('SELECT * FROM customers WHERE id = ?', Number(req.params.id)); if (!c) return res.status(404).send(V.notFound());
+  const q = quoteOf(c);
+  if (q.problems.length) { setFlash(res, 'err', q.problems.join('／')); return res.redirect(`/admin/customers/${c.id}#billing`); }
+  if (c.stripe_subscription_id) { setFlash(res, 'err', 'すでに月額の決済が始まっています。金額を変えるときは「請求中の内容を変更する」を使ってください'); return res.redirect(`/admin/customers/${c.id}#billing`); }
+  run(`UPDATE tokens SET used_at = ? WHERE customer_id = ? AND purpose = 'pay' AND used_at IS NULL`, now(), c.id); // 古いリンクは無効に
+  const token = newToken();
+  run('INSERT INTO tokens (token, customer_id, purpose, expires_at) VALUES (?,?,?,?)', token, c.id, 'pay', now() + 14 * 24 * 3600 * 1000);
+  run('UPDATE customers SET pending_quote_json = ? WHERE id = ?', JSON.stringify(q), c.id);
+  const url = `${BASE_URL}/pay/${token}`;
+  if (req.body.send_mail) sendMail(mails.payLink(c, url, q));
+  audit(`admin:${req.admin.id}`, 'paylink', c.id);
+  setFlash(res, 'ok', req.body.send_mail ? '決済のご案内メールを送りました' : '決済リンクを作りました（メールは送っていません）');
+  res.redirect(`/admin/customers/${c.id}?paylink=${encodeURIComponent(token)}#billing`);
+});
+// 管理：請求中の内容を変更（次回の請求から）
+app.post('/admin/customers/:id/apply-billing', requireAdmin, async (req, res) => {
+  const c = one('SELECT * FROM customers WHERE id = ?', Number(req.params.id)); if (!c) return res.status(404).send(V.notFound());
+  const q = quoteOf(c);
+  if (q.problems.length) { setFlash(res, 'err', q.problems.join('／')); return res.redirect(`/admin/customers/${c.id}#billing`); }
+  try { await applyToSubscription(c, q); audit(`admin:${req.admin.id}`, 'billing-apply', `${c.id} ${q.monthlyTotal}`); setFlash(res, 'ok', `次回の請求から月額 ${q.monthlyTotal.toLocaleString()}円 にしました`); }
+  catch (e) { console.error(e); setFlash(res, 'err', `変更できませんでした：${e.message}`); }
+  res.redirect(`/admin/customers/${c.id}#billing`);
+});
+// 管理：単発の請求（次回の月額と一緒に）
+app.post('/admin/customers/:id/charge', requireAdmin, async (req, res) => {
+  const c = one('SELECT * FROM customers WHERE id = ?', Number(req.params.id)); if (!c) return res.status(404).send(V.notFound());
+  const label = String(req.body.label || '').trim().slice(0, 60);
+  const amount = Math.round(Number(String(req.body.amount || '').normalize('NFKC').replace(/[,円\s]/g, '')));
+  if (!label || !(amount > 0)) { setFlash(res, 'err', '内容と金額を入れてください'); return res.redirect(`/admin/customers/${c.id}#billing`); }
+  try { await addOneTimeCharge(c, { label, amount }); audit(`admin:${req.admin.id}`, 'charge', `${c.id} ${label} ${amount}`); setFlash(res, 'ok', `「${label}」${amount.toLocaleString()}円を次回の請求に追加しました`); }
+  catch (e) { setFlash(res, 'err', e.message); }
+  res.redirect(`/admin/customers/${c.id}#billing`);
 });
 
 // ================= 管理画面 =================
@@ -303,7 +476,7 @@ app.post('/admin/logout', (req, res) => { destroySession(req.cookies.asid); res.
 
 app.get('/admin', requireAdmin, (req, res) => {
   const customers = all('SELECT * FROM customers ORDER BY created_at DESC');
-  const queue = all(`SELECT r.*, c.business_name, ${firstText} AS first_text FROM requests r JOIN customers c ON c.id = r.customer_id WHERE r.status IN ('needs_admin','failed') ORDER BY r.updated_at`);
+  const queue = all(`SELECT r.*, c.business_name, ${firstText} AS first_text FROM requests r JOIN customers c ON c.id = r.customer_id WHERE r.status IN ('needs_admin','failed') OR r.admin_flag = 1 ORDER BY r.updated_at`);
   const active = customers.filter((c) => c.status === 'active');
   const stats = { active: active.length, mrr: active.reduce((s, c) => s + c.monthly_fee, 0), attention: queue.length, pastDue: customers.filter((c) => c.payment_status === 'past_due').length };
   res.send(V.adminDashboard({ stats, queue, customers, flash: takeFlash(req, res) }));
@@ -344,7 +517,9 @@ app.get('/admin/customers/:id', requireAdmin, (req, res) => {
   const versions = site ? all('SELECT * FROM versions WHERE site_id = ? ORDER BY id DESC LIMIT 30', site.id) : [];
   const requests = all(`SELECT r.*, ${firstText} AS first_text FROM requests r WHERE customer_id = ? ORDER BY updated_at DESC`, c.id);
   const inviteUrl = req.query.invite ? `${BASE_URL}/set-password?token=${req.query.invite}` : null;
-  res.send(V.adminCustomerPage({ c, site, versions, requests, inviteUrl, flash: takeFlash(req, res) }));
+  const payUrl = req.query.paylink ? `${BASE_URL}/pay/${req.query.paylink}` : null;
+  const audits = all(`SELECT * FROM audit_log WHERE (action IN ('billing-save','billing-apply','charge','paylink') AND (detail = ? OR detail LIKE ?)) OR actor = ? ORDER BY id DESC LIMIT 12`, String(c.id), `${c.id} %`, `customer:${c.id}`);
+  res.send(V.adminCustomerPage({ c, site, versions, requests, inviteUrl, payUrl, quote: quoteOf(c), billed: c.billed_json ? JSON.parse(c.billed_json) : null, mode: stripeMode(), audits, flash: takeFlash(req, res) }));
 });
 app.post('/admin/customers/:id', requireAdmin, (req, res) => {
   const b = req.body, id = Number(req.params.id);
@@ -380,6 +555,7 @@ app.get('/admin/r/:id', requireAdmin, (req, res) => {
 });
 app.post('/admin/r/:id/reply', requireAdmin, (req, res) => {
   const r = one('SELECT * FROM requests WHERE id = ?', Number(req.params.id));
+  run('UPDATE requests SET admin_flag = 0 WHERE id = ?', r.id);
   run('INSERT INTO messages (request_id, sender, body, created_at) VALUES (?,?,?,?)', r.id, 'admin', String(req.body.text).slice(0, 2000), now());
   run('UPDATE requests SET status = CASE WHEN status IN (\'needs_admin\',\'failed\') THEN \'waiting_customer\' ELSE status END, updated_at = ? WHERE id = ?', now(), r.id);
   sendMail(mails.reply(one('SELECT * FROM customers WHERE id = ?', r.customer_id), `${BASE_URL}/app/r/${r.id}`));
@@ -408,4 +584,4 @@ app.post('/admin/r/:id/discard', requireAdmin, (req, res) => {
 app.use((req, res) => res.status(404).send(V.notFound()));
 app.use((err, req, res, next) => { console.error(err); res.status(500).send('エラーが起きました。時間をおいてお試しください'); });
 
-app.listen(PORT, () => console.log(`Web係 管理システム: ${BASE_URL}  （AI: ${process.env.ANTHROPIC_API_KEY ? 'Claude' : '仮の動作'}）`));
+app.listen(PORT, () => console.log(`Web係 管理システム: ${BASE_URL}  （AI: ${process.env.ANTHROPIC_API_KEY ? 'Claude' : '仮の動作'}／決済: ${{ mock: '仮の決済', test: 'Stripeテスト', live: 'Stripe本番' }[stripeMode()]}）`));
