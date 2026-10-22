@@ -24,7 +24,10 @@ const attr = (s, name) => (s.match(new RegExp(`\\s${name}="([^"]*)"`)) || [])[1]
 const num = (v) => (v ? Number(v) : null);
 
 const toPlain = (html) => html.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').trim();
-const toHtml = (text) => String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+// 文字は無害化してから入れる。URL は押せるリンクにする（http/https のみ）
+const toHtml = (text) => String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  .replace(/https?:\/\/[^\s<"　、。）)」]+/g, (u) => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`)
+  .replace(/\n/g, '<br>');
 
 export function extractRegions(html) {
   const out = [];
@@ -62,8 +65,8 @@ export function applyChanges(html, changes, listChanges = []) {
     byKey.has(key) ? `<${tag}${a1} data-edit="${key}"${a2}>${toHtml(byKey.get(key))}</${tag}>` : full);
   out = out.replace(IMG_RE, (full, a1, key, a2) => {
     if (!byKey.has(key)) return full;
-    const replaced = (a1 + a2).replace(/\ssrc="[^"]*"/, '');
-    return `<img${replaced.startsWith(' ') ? '' : ' '}${replaced.trim()} data-edit-img="${key}" src="${byKey.get(key)}">`;
+    const rest = (a1 + ' ' + a2).replace(/\ssrc="[^"]*"/, '').replace(/\s+/g, ' ').trim();
+    return `<img ${rest ? rest + ' ' : ''}data-edit-img="${key}" src="${byKey.get(key)}">`;
   });
   return out;
 }

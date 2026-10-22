@@ -25,12 +25,18 @@ const ProposalSchema = z.object({
   guideline_warnings: z.array(z.string()), // 医療広告ガイドライン等で気になる表現（なければ空）
 });
 
-// プライバシーポリシー：AIには掲載予定の情報と依頼内容だけを渡す。個人情報らしきものは伏せる。
+// プライバシーポリシー：AIには掲載予定の情報と依頼内容だけを渡す。電話番号・メールアドレスは
+// ［電話番号1］のような印に置き換えて渡し（AIは番号そのものを見ない）、AIの案ができたあとで元に戻す。
+// こうすると「電話番号が変わりました」のような依頼も、番号をAIに渡さずに反映できる。
 export function maskPersonalInfo(text) {
-  return String(text)
-    .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, '［メールアドレス］')
-    .replace(/0\d{1,4}[-‐ー−\s]?\d{1,4}[-‐ー−\s]?\d{3,4}/g, '［電話番号］');
+  const map = {};
+  const n = { mail: 0, tel: 0 };
+  const masked = String(text)
+    .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, (m) => { const k = `［メールアドレス${++n.mail}］`; map[k] = m; return k; })
+    .replace(/0\d{1,4}[-‐ー−\s]?\d{1,4}[-‐ー−\s]?\d{3,4}/g, (m) => { const k = `［電話番号${++n.tel}］`; map[k] = m.replace(/[‐ー−\s]/g, '-'); return k; });
+  return { text: masked, map };
 }
+const unmask = (v, map) => Object.entries(map).reduce((s, [k, real]) => s.replaceAll(k, real), String(v));
 
 // 医療広告ガイドラインで使えない代表的な表現（AIとは別に機械的にも確認する）
 const CLINIC_NG = ['日本一', 'No.1', 'ナンバーワン', '最高', '最先端', '絶対', '必ず治', '痛くない', '100%', '完全', '安心安全'];
@@ -51,7 +57,9 @@ const SYSTEM = `あなたは小さな飲食店・医院のホームページを�
 - 文字数は各場所の max_chars 以内に必ず収める。収まらないときは要点だけに短くする。
 - デザイン・レイアウト・色・文字の大きさ・ページの追加・新しい機能の依頼は自動では対応しない。needs_admin を true にし、admin_reason に理由を書く。
 - 依頼の一部だけが自動でできる場合は、できる部分を changes / list_changes に入れたうえで needs_admin を true にし、できなかった部分を customer_note にお客さま向けに書く（例：「目立たせる見た目の変更は、担当者からご相談のご連絡をします。」）。
+- 「来週の水曜」のような言い方は today をもとに日付にする。依頼文の日付と曜日が食い違うとき（例：10/29は木曜なのに「水曜」）は、どちらか決めつけず question で確認する。
 - 依頼があいまいで決めきれないとき（日付や金額が不明など）は、changes を空にして question に短い質問を書く。
+- ［電話番号1］［メールアドレス1］のような印は、お客さまが書いた番号・アドレスの代わり。載せるときは印をそのまま書く（あとで本物に置き換わる）。
 - 写真が添付されたら、どの画像の場所を替えるべきか判断し、new_value に添付写真のパス（attached_image）を入れる。
 - 文章はお店のこれまでの口調に合わせ、丁寧で短く。誇大な表現や事実でないことは書かない。
 - 医院のサイトでは、医療広告ガイドラインで使えない表現（最上級・効果の保証・体験談など）を避け、気になる点は guideline_warnings に書く。
@@ -60,13 +68,14 @@ const SYSTEM = `あなたは小さな飲食店・医院のホームページを�
 ${WRITING_RULES}`;
 
 export async function proposeChanges({ businessType, businessName, regions, requestText, attachedImage }) {
-  const masked = maskPersonalInfo(requestText);
+  const { text: masked, map } = maskPersonalInfo(requestText);
   if (!process.env.ANTHROPIC_API_KEY) return mockProposal({ regions, requestText: masked, attachedImage });
 
   const client = new Anthropic();
   const notation = siteNotation(regions);
   const payload = {
     business: { name: businessName, type: businessType === 'clinic' ? '医院・治療院' : '飲食店' },
+    today: new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }),
     notation,
     regions: regions.map((r) => (r.type === 'list'
       ? { key: r.key, type: 'list', label: r.label, max_items: r.maxItems, fields: r.fields.map((f) => ({ name: f.name, label: f.label, max_chars: f.max })), current: r.items }
@@ -91,7 +100,7 @@ export async function proposeChanges({ businessType, businessName, regions, requ
       return { understood: false, needs_admin: true, admin_reason: 'AIが応答を控えました', customer_note: '', question: '', summary: '', changes: [], list_changes: [], guideline_warnings: [] };
     }
     const text = res.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
-    parsed = tidy(ProposalSchema.parse(JSON.parse(text)), regions, notation);
+    parsed = tidy(ProposalSchema.parse(JSON.parse(text)), regions, notation, map);
     if (parsed.question || (parsed.needs_admin && !parsed.changes.length && !parsed.list_changes.length)) return parsed;
     issues = reviewProposal({ regions, changes: parsed.changes, listChanges: parsed.list_changes });
     if (!issues.length) break;
@@ -103,13 +112,13 @@ export async function proposeChanges({ businessType, businessName, regions, requ
 }
 
 // AIの案を整える：存在しない場所への変更を捨て、表記をそろえ、一覧を {項目: 値} の形にする
-function tidy(p, regions, notation) {
+function tidy(p, regions, notation, map = {}) {
   const byKey = Object.fromEntries(regions.map((r) => [r.key, r]));
   p.changes = p.changes.filter((c) => byKey[c.key] && byKey[c.key].type !== 'list')
-    .map((c) => (byKey[c.key].type === 'text' ? { ...c, new_value: normalizeValue(c.new_value, notation) } : c));
+    .map((c) => (byKey[c.key].type === 'text' ? { ...c, new_value: normalizeValue(unmask(c.new_value, map), notation) } : c));
   p.list_changes = (p.list_changes || []).filter((l) => byKey[l.key]?.type === 'list').map((l) => {
     const names = new Set(byKey[l.key].fields.map((f) => f.name));
-    return { key: l.key, items: l.items.map((pairs) => Object.fromEntries(pairs.filter((x) => names.has(x.field)).map((x) => [x.field, normalizeValue(x.value, notation)]))) };
+    return { key: l.key, items: l.items.map((pairs) => Object.fromEntries(pairs.filter((x) => names.has(x.field)).map((x) => [x.field, normalizeValue(unmask(x.value, map), notation)]))) };
   });
   return p;
 }

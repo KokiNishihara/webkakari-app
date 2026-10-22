@@ -19,7 +19,9 @@ const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}\u{FE0F}]
 
 // 機械的にそろえられるものは、ここで直してしまう
 export function normalizeValue(value, notation) {
-  let v = String(value ?? '');
+  // URL・メールアドレスは1文字も変えない（記号を全角にするとリンクが壊れる）
+  const keep = [];
+  let v = String(value ?? '').replace(/https?:\/\/[^\s　、。）)」]+|[\w.+-]+@[\w-]+\.[\w.-]+/g, (m) => { keep.push(m); return `\u0000${keep.length - 1}\u0000`; });
   v = v.replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xFEE0));  // 数字は半角
   v = v.replace(/[Ａ-Ｚａ-ｚ]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xFEE0));
   v = v.replace(EMOJI, '');
@@ -29,7 +31,7 @@ export function normalizeValue(value, notation) {
   if (notation.yenSuffix) v = v.replace(/[¥￥]\s?([\d,]+)/g, '$1円');
   if (notation.comma) v = v.replace(/(\d{4,})(?=円)/g, (n) => Number(n).toLocaleString('ja-JP'));
   v = v.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-  return v;
+  return v.replace(/\u0000(\d+)\u0000/g, (_, i) => keep[Number(i)]);
 }
 
 // AIが書きがちで、小さなお店のHPでは浮いてしまう言い回し（見つけたら書き直させる）
@@ -38,6 +40,9 @@ const AI_PHRASES = [
   '実現します', 'お届けします', '提供いたします', 'お待ちしております！', 'ぜひ一度', 'ぜひお気軽に',
   '魅力', '厳選', '唯一無二', '最高の', '珠玉', '五感で', '彩り豊か', '新たな', '〜しませんか', 'しませんか？',
   '—', '──', '「」',
+  // 以下は web-design-pro スキル（references/ai-tells.md「日本語の文章18項目」）から
+  'することができます', 'と言えるでしょう', 'ではないでしょうか', 'が重要です', '欠かせない', '掘り下げ',
+  '革新的', 'シームレス', '次世代', 'を実現', '以下にまとめ', 'いかがでしたか', 'だけでなく', '**', '→', '⚠',
 ];
 
 // 場所ごとの長さの上限：HTMLに data-max があればそれ、なければ今の長さから決める
@@ -60,6 +65,9 @@ export function reviewProposal({ regions, changes, listChanges }) {
     if (lines > Math.max(curLines + 2, 3)) issues.push(`${where}の改行が多すぎます（${lines}行）`);
     for (const p of AI_PHRASES) if (value.includes(p)) issues.push(`${where}の「${p}」は広告っぽく浮くので、ふつうの言い方に`);
     if (/[!！]/.test(value) && (value.match(/[!！]/g) || []).length > 1) issues.push(`${where}の「！」は1つまでに`);
+    // 読点が多い文はAIっぽく読みにくい（ai-tells.md #13）。1文に読点4つ以上なら分ける
+    for (const sent of value.split(/[。\n]/)) if ((sent.match(/、/g) || []).length >= 4) { issues.push(`${where}の文に読点が多すぎます。文を分けてください`); break; }
+    for (const w of weekdayIssues(value)) issues.push(`${where}：${w}。依頼文の日付と曜日が食い違っている場合は、changes を空にして question でお客さまに確認する`);
   };
   for (const c of changes) {
     const r = byKey[c.key];
@@ -89,4 +97,26 @@ export const WRITING_RULES = `文章の決まり（デザインと読みやす�
 - 使わない言い回し：${AI_PHRASES.filter((p) => p.length > 1).join('、')}。絵文字、「！」の連発、ダッシュ（—）も使わない。
 - 表記は今のサイトに合わせる（数字は半角、時間の範囲は notation.tilde、価格は notation の書き方）。
 - 改行は今と同じくらいにとどめる。箇条書きの記号（・や-）を新しく足さない。
-- 一覧（type: list）は、1件の中身を fields の項目に分けて入れる。並び順は、指示がなければ今の順番を保つ。`;
+- 一覧（type: list）は、1件の中身を fields の項目に分けて入れる。並び順は、指示がなければ今の順番を保つ。
+- 「〜することができます」は「〜できます」。「〜と言えるでしょう」「〜ではないでしょうか」「〜が重要です」は使わない。
+- 読点は少なめに。長い文は2つに分ける。語尾を全部「〜ます」でそろえず、言い切りも混ぜてよい。
+- 締めの問いかけ（「いかがでしょうか」「〜しませんか」）や前置き（「以下にまとめました」）は書かない。
+- 見た目の改行（1行の長さ調整のための改行）は入れない。改行は意味の区切り（お知らせが2件ある等）だけ。
+（これらは西原さんの HP 制作スキル web-design-pro の「AI感の兆候」から取り込んだ決まり。スキルを更新したらここも合わせる）`;
+
+// 日付と曜日の食い違いを見つける（例：10月29日（水）なのに実際は木曜）。年は「今日」から近い未来として推定する
+const WD = ['日', '月', '火', '水', '木', '金', '土'];
+export function weekdayIssues(value, today = new Date()) {
+  const out = [];
+  const re = /(\d{1,2})\s*[月/]\s*(\d{1,2})\s*日?\s*[（(]\s*([日月火水木金土])/g;
+  for (const m of String(value).matchAll(re)) {
+    const mon = Number(m[1]), day = Number(m[2]);
+    if (mon < 1 || mon > 12 || day < 1 || day > 31) continue;
+    let y = today.getFullYear();
+    const d0 = new Date(y, mon - 1, day);
+    if (d0 < new Date(today.getFullYear(), today.getMonth(), today.getDate() - 60)) y += 1; // かなり前の日付なら来年のこと
+    const d = new Date(y, mon - 1, day);
+    if (WD[d.getDay()] !== m[3]) out.push(`「${m[0]}）」の曜日が違います（${y}年${mon}月${day}日は${WD[d.getDay()]}曜日）`);
+  }
+  return out;
+}

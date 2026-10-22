@@ -130,7 +130,8 @@ for (const [table, col, def] of [
   ['customers', 'billed_json', 'TEXT'],           // いまStripeで請求している内容（変更の差分確認用）
   ['customers', 'terms_agreed_at', 'INTEGER'],    // 利用規約・特商法への同意（決済画面で記録）
   ['customers', 'pending_quote_json', 'TEXT'],
-  ['requests', 'admin_flag', 'INTEGER NOT NULL DEFAULT 0'],  // 一部だけ自動でできた依頼（担当者の対応が残っている）    // 決済リンクを送った時点の見積り（決済完了でこの内容を請求中にする）
+  ['requests', 'admin_flag', 'INTEGER NOT NULL DEFAULT 0'],
+  ['requests', 'layout_issues', 'TEXT'],          // 確認画面のスマホ幅点検で見つかった崩れ（あれば公開を止める）  // 一部だけ自動でできた依頼（担当者の対応が残っている）    // 決済リンクを送った時点の見積り（決済完了でこの内容を請求中にする）
 ]) {
   const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
   if (!cols.includes(col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);

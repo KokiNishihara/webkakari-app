@@ -6,11 +6,11 @@
 <style>
 :root{--ink:#14212B;--sub:#4C5A66;--line:#DCE8F0;--paper:#F1F8FD;--accent:#1E9BD7;font-family:"Noto Sans JP",sans-serif;color:var(--ink);line-height:1.85}
 *{box-sizing:border-box;margin:0;padding:0}
-h1,h2,.catch{text-wrap:balance}p,dd,li{text-wrap:pretty;overflow-wrap:anywhere;line-break:strict}
+html{text-autospace:normal;text-spacing-trim:trim-start}h1,h2,.catch{text-wrap:balance;word-break:auto-phrase}p,dd,li{text-wrap:pretty;overflow-wrap:anywhere;line-break:strict}
 .news{white-space:normal}.menu li span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}body{background:#fff}
 header{max-width:1000px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;justify-content:space-between}
 .logo{font-family:"Shippori Mincho B1",serif;font-size:22px;letter-spacing:.08em}
-header a{background:var(--accent);color:#fff;text-decoration:none;padding:10px 18px;border-radius:4px;font-weight:700;font-size:14px}
+header{gap:12px}.logo{min-width:0;overflow-wrap:anywhere;line-height:1.4}header a{flex:none;white-space:nowrap;background:var(--accent);color:#fff;text-decoration:none;padding:10px 18px;border-radius:4px;font-weight:700;font-size:14px}
 .hero{max-width:1000px;margin:0 auto;padding:0 20px}
 .hero img{width:100%;aspect-ratio:16/8;object-fit:cover;border-radius:6px;background:var(--paper)}
 .catch{font-family:"Shippori Mincho B1",serif;font-size:clamp(24px,4vw,36px);margin:28px 0 10px;line-height:1.5}
@@ -20,7 +20,7 @@ h2{font-family:"Shippori Mincho B1",serif;font-size:22px;margin-bottom:16px}
 dl div{display:grid;grid-template-columns:8em 1fr;padding:12px 0;border-bottom:1px solid var(--line)}dt{font-weight:700}
 .menu li{list-style:none;display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
 footer{text-align:center;padding:30px;font-size:12px;color:var(--sub)}
-@media(max-width:600px){dl div{grid-template-columns:1fr}}
+@media(max-width:600px){dl div{grid-template-columns:1fr}.logo{font-size:18px;letter-spacing:.04em}header a{padding:9px 14px}}
 </style></head><body>
 <header><span class="logo" data-edit="name" data-label="医院名">{{NAME}}</span><a href="#info" data-edit="cta" data-label="予約ボタンの文字">Web予約</a></header>
 <div class="hero"><img data-edit-img="hero" data-label="トップの写真" data-w="1600" src="assets/hero.jpg" alt="">

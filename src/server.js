@@ -202,9 +202,20 @@ app.post('/app/r/:id/messages', requireCustomer, async (req, res) => {
   try { await addCustomerMessage(req.customer, site, r, req.body); res.json({ redirect: `/app/r/${r.id}` }); }
   catch (e) { res.status(400).json({ error: e.message }); }
 });
+// 確認画面（スマホ幅）での自動点検の結果。崩れが見つかったら公開を止め、担当者に回す
+app.post('/app/r/:id/layout-check', requireCustomer, (req, res) => {
+  const r = ownRequest(req);
+  if (!r || r.status !== 'review') return res.json({});
+  const issues = [].concat(req.body.issues || []).map((x) => String(x).slice(0, 120)).slice(0, 10);
+  if (!issues.length || r.layout_issues) return res.json({ blocked: !!r.layout_issues });
+  run('UPDATE requests SET layout_issues = ?, admin_flag = 1, updated_at = ? WHERE id = ?', JSON.stringify(issues), now(), r.id);
+  audit('system', 'layout-issues', `request=${r.id} ${issues.join(' / ')}`);
+  sendMail(mails.adminNotice(`【表示の崩れ】${req.customer.business_name} の修正案`, `${BASE_URL}/admin/r/${r.id}`));
+  res.json({ blocked: true });
+});
 app.post('/app/r/:id/publish', requireCustomer, async (req, res) => {
   const r = ownRequest(req);
-  if (!r || r.status !== 'review' || !r.preview_version_id) return res.redirect('/app');
+  if (!r || r.status !== 'review' || !r.preview_version_id || r.layout_issues) return res.redirect(r ? `/app/r/${r.id}` : '/app');
   try {
     await publishVersion(r.site_id, r.preview_version_id, `customer:${req.customer.id}`);
     run('UPDATE requests SET status = ?, updated_at = ? WHERE id = ?', 'published', now(), r.id);
@@ -235,7 +246,7 @@ async function processRequest(requestId) {
   }
   const listChanges = p.list_changes || [];
   // 書き直しても長さ・件数の決まりに収まらないものは、デザインが崩れるので担当者に回す
-  const layoutIssues = (p.style_issues || []).filter((x) => /長すぎ|件まで|空です|空には|改行が多すぎ/.test(x));
+  const layoutIssues = (p.style_issues || []).filter((x) => /長すぎ|件まで|空です|空には|改行が多すぎ|曜日が違います/.test(x));
   const hasChanges = p.changes.length || listChanges.length;
   if ((p.needs_admin && !hasChanges) || !hasChanges || layoutIssues.length) {
     run('INSERT INTO messages (request_id, sender, body, created_at) VALUES (?,?,?,?)', r.id, 'system', 'ありがとうございます。このご依頼は担当者が確認して、1営業日以内にご連絡します。', now());
@@ -273,7 +284,7 @@ async function processRequest(requestId) {
   const warnings = [...new Set([...(p.guideline_warnings || []), ...guidelineCheck(c.business_type, p.changes, listChanges), ...notes])];
   run('INSERT INTO messages (request_id, sender, body, data, created_at) VALUES (?,?,?,?,?)', r.id, 'system',
     '直したあとの画面ができました。内容を確かめて、よろしければ「公開する」を押してください。', JSON.stringify({ summary: p.summary, diffs, warnings, mock: !!p.mock }), now());
-  run('UPDATE requests SET status = ?, preview_version_id = ?, summary = ?, updated_at = ? WHERE id = ?', 'review', vid, p.summary, now(), r.id);
+  run('UPDATE requests SET status = ?, preview_version_id = ?, summary = ?, layout_issues = NULL, updated_at = ? WHERE id = ?', 'review', vid, p.summary, now(), r.id);
   sendMail(mails.review(c, `${BASE_URL}/app/r/${r.id}`));
 }
 function failRequest(id, e) {
@@ -570,7 +581,7 @@ app.post('/admin/r/:id/retry', requireAdmin, (req, res) => {
 app.post('/admin/r/:id/publish', requireAdmin, async (req, res) => {
   const r = one('SELECT * FROM requests WHERE id = ?', Number(req.params.id));
   await publishVersion(r.site_id, r.preview_version_id, `admin:${req.admin.id}`);
-  run('UPDATE requests SET status = ?, updated_at = ? WHERE id = ?', 'published', now(), r.id);
+  run('UPDATE requests SET status = ?, admin_flag = 0, layout_issues = NULL, updated_at = ? WHERE id = ?', 'published', now(), r.id);
   run('INSERT INTO messages (request_id, sender, body, created_at) VALUES (?,?,?,?)', r.id, 'system', '公開しました。ホームページに反映されています。', now());
   const pc = one('SELECT * FROM customers WHERE id = ?', r.customer_id), ps = one('SELECT * FROM sites WHERE id = ?', r.site_id);
   sendMail(mails.published(pc, ps.domain ? `https://${ps.domain}/` : `${BASE_URL}/s/${ps.slug}/`));

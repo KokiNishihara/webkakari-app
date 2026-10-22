@@ -106,3 +106,27 @@
   addEventListener('resize', () => set(Number(pv.querySelector('[aria-selected="true"]').dataset.pvW)));
   set(390);
 })();
+
+// 直したあとの画面を、スマホ幅（390px）で自動点検する（responsive-check スキルの機械チェックと同じ考え方）
+// 横にはみ出す・写真が表示されない・文字が小さすぎる、が見つかったら公開を止めて担当者に回す
+(() => {
+  const pv = document.querySelector('[data-pv]'); if (!pv) return;
+  const frame = pv.querySelector('iframe'), url = pv.dataset.check;
+  if (!url) return;
+  frame.addEventListener('load', () => setTimeout(() => {
+    let issues = [];
+    try {
+      const d = frame.contentDocument, w = frame.contentWindow.innerWidth;
+      if (d.documentElement.scrollWidth > d.documentElement.clientWidth + 1) issues.push('スマホで横にはみ出しています');
+      d.querySelectorAll('[data-edit],[data-f],[data-edit-list]').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.width && r.right > w + 1) issues.push(`「${el.dataset.label || el.dataset.edit || el.dataset.f}」が画面の外にはみ出しています`);
+        if (parseFloat(frame.contentWindow.getComputedStyle(el).fontSize) < 13) issues.push(`「${el.dataset.label || el.dataset.edit || el.dataset.f}」の文字が小さすぎます`);
+      });
+      d.querySelectorAll('img').forEach((img) => { if (img.complete && img.naturalWidth === 0) issues.push(`写真（${img.dataset.label || img.alt || '画像'}）が表示されていません`); });
+    } catch { return; }
+    issues = [...new Set(issues)];
+    fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ issues }) })
+      .then((r) => r.json()).then((res) => { if (res.blocked && !document.querySelector('[data-layout-warn]')) location.reload(); }).catch(() => {});
+  }, 600), { once: true });
+})();

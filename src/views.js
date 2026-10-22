@@ -136,13 +136,13 @@ function statusBlock(r, c, preview) {
     const warns = (d.warnings || []).map((w) => `<div class="warn">${esc(w)}</div>`).join('');
     return `<div class="card review"><h2>直したあとの画面ができました</h2><p class="sum">${esc(d.summary || '')}</p>
 <ul class="diff">${diffs}</ul>${warns}
-<div class="pv" data-pv>
+<div class="pv" data-pv data-check="/app/r/${r.id}/layout-check">
 <div class="pv-tabs" role="tablist"><button type="button" role="tab" aria-selected="true" data-pv-w="390">スマホで見る</button><button type="button" role="tab" aria-selected="false" data-pv-w="1100">パソコンで見る</button></div>
 <div class="pv-frame"><iframe src="/p/${esc(preview.slug)}/v${preview.version_id}/" title="直したあとの画面" loading="lazy"></iframe></div>
 </div>
 <div class="actions">
 <a class="preview-link" href="/p/${esc(preview.slug)}/v${preview.version_id}/" target="_blank" rel="noopener">${ICON.eye}別の画面で大きく見る</a>
-<form method="post" action="/app/r/${r.id}/publish"><button class="btn block">この内容で公開する</button></form>
+${r.layout_issues ? `<div class="warn" data-layout-warn>スマホで表示が崩れている可能性があるため、担当者が確認してから公開します。確認が済みしだい、この画面でご連絡します。</div>` : `<form method="post" action="/app/r/${r.id}/publish"><button class="btn block">この内容で公開する</button></form>`}
 <button type="button" class="btn ghost block" data-focus-composer>もう少し直したい</button>
 </div><p class="muted" style="margin-top:12px;text-align:center">「公開する」を押すまで、ホームページは変わりません。</p></div>`;
   }
@@ -249,6 +249,7 @@ export function adminRequestPage({ r, c, messages, preview }) {
   return `${head('依頼｜Web係 管理')}<body class="admin">${adminTop()}<main class="wrap" style="max-width:760px">
 <h1>${esc(c.business_name)} のご依頼 ${badge(r.status)}</h1>
 ${preview ? `<p><a href="/p/${esc(preview.slug)}/v${preview.version_id}/" target="_blank">確認用の画面を開く（版 ${preview.version_id}）</a></p>` : ''}
+${r.layout_issues ? `<div class="warn">スマホ幅の自動点検で見つかった崩れ（お客さまの公開は止めています）：<br>${JSON.parse(r.layout_issues).map(esc).join('<br>')}<br>確認して問題なければ「代わりに公開する」、直す場合はHTMLを差し替えるか「AIでもう一度作る」。</div>` : ''}
 <div class="thread" style="margin-top:14px">${bubbles}</div>
 <form method="post" action="/admin/r/${r.id}/reply" class="card" style="margin-top:16px"><label class="f" style="margin-top:0">お客さまへ返信（担当 西原 として表示）</label><textarea class="input" name="text" rows="3" required></textarea>
 <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn">返信する</button></div></form>
