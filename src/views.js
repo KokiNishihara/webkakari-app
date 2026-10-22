@@ -35,9 +35,9 @@ export function loginPage({ flash: f, email = '' }) {
 <div class="card">${flash(f)}
 <form method="post" action="/login" novalidate>
 <label class="f" for="email">メールアドレス</label>
-<input class="input" id="email" name="email" type="email" autocomplete="email" inputmode="email" required value="${esc(email)}">
+<input class="input" id="email" name="email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" required value="${esc(email)}">
 <label class="f" for="password">パスワード</label>
-<input class="input" id="password" name="password" type="password" autocomplete="current-password" required>
+<input class="input" id="password" name="password" type="password" autocomplete="current-password" autocapitalize="off" spellcheck="false" required>
 <label class="show-pw"><input type="checkbox" data-toggle-pw="password"> パスワードを表示する</label>
 <button class="btn block" style="margin-top:20px">ログインする</button>
 </form>
@@ -158,7 +158,7 @@ const adminTop = () => `<header class="top"><div class="in"><a class="brand" hre
 export function adminLoginPage({ flash: f }) {
   return `${head('管理ログイン')}<body class="admin"><main class="auth"><h1>Web係 管理画面</h1><div class="card">${flash(f)}
 <form method="post" action="/admin/login"><label class="f" for="email">メールアドレス</label><input class="input" id="email" name="email" type="email" autocomplete="username" required>
-<label class="f" for="password">パスワード</label><input class="input" id="password" name="password" type="password" autocomplete="current-password" required>
+<label class="f" for="password">パスワード</label><input class="input" id="password" name="password" type="password" autocomplete="current-password" autocapitalize="off" spellcheck="false" required>
 <button class="btn block" style="margin-top:20px">ログイン</button></form></div></main></body></html>`;
 }
 

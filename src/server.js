@@ -77,7 +77,7 @@ app.post('/set-password', (req, res) => {
   const t = validToken(req.body.token);
   if (!t) return res.redirect('/login');
   const c = one('SELECT * FROM customers WHERE id = ?', t.customer_id);
-  const problem = passwordProblem(req.body.password) || (req.body.password !== req.body.password2 ? '2回の入力が一致しません' : null);
+  const problem = passwordProblem(req.body.password) || (String(req.body.password).normalize('NFKC') !== String(req.body.password2).normalize('NFKC') ? '2回の入力が一致しません' : null);
   if (problem) return res.status(400).send(V.setPasswordPage({ token: t.token, name: c.contact_name, purpose: t.purpose, flash: { type: 'err', msg: problem } }));
   run('UPDATE customers SET password_hash = ?, failed_count = 0, locked_until = NULL WHERE id = ?', hashPassword(req.body.password), c.id);
   run('UPDATE tokens SET used_at = ? WHERE token = ?', now(), t.token);
@@ -89,7 +89,7 @@ app.post('/set-password', (req, res) => {
 });
 app.get('/forgot', (req, res) => res.send(V.forgotPage({})));
 app.post('/forgot', (req, res) => {
-  const c = one('SELECT * FROM customers WHERE email = ?', String(req.body.email || '').trim().toLowerCase());
+  const c = one('SELECT * FROM customers WHERE email = ?', String(req.body.email || '').normalize('NFKC').trim().toLowerCase());
   if (c) {
     const token = newToken();
     run('INSERT INTO tokens (token, customer_id, purpose, expires_at) VALUES (?,?,?,?)', token, c.id, 'reset', now() + 60 * 60 * 1000);
@@ -313,7 +313,7 @@ app.get('/admin/customers/new', requireAdmin, (req, res) => res.send(V.adminCust
 const SAMPLE = path.resolve('templates');
 app.post('/admin/customers', requireAdmin, (req, res) => {
   const b = req.body;
-  const email = String(b.email || '').trim().toLowerCase();
+  const email = String(b.email || '').normalize('NFKC').trim().toLowerCase();
   if (one('SELECT id FROM customers WHERE email = ?', email)) return res.send(V.adminCustomerNew({ flash: { type: 'err', msg: 'このメールアドレスはすでに登録されています' } }));
   const info = run(`INSERT INTO customers (business_name, business_type, contact_name, email, phone, plan, monthly_fee, payment_method, created_at) VALUES (?,?,?,?,?,?,?,?,?)`,
     b.business_name, b.business_type === 'clinic' ? 'clinic' : 'food', b.contact_name, email, b.phone || null, b.plan || 'hp', Number(b.monthly_fee) || 9800, b.payment_method || 'card', now());
