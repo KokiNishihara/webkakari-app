@@ -517,15 +517,46 @@ app.get('/app/contract', requireCustomer, async (req, res) => {
 });
 app.post('/app/contract/cancel-request', requireCustomer, async (req, res) => {
   const c = req.customer;
-  if (c.cancel_at || c.cancel_requested_at) { setFlash(res, 'ok', 'すでに解約のお申し込みを承っています'); return res.redirect('/app/contract'); }
+  if (c.cancel_at) { setFlash(res, 'ok', `すでに ${c.cancel_at} で解約の手続きが済んでいます`); return res.redirect('/app/contract'); }
   if (!req.body.confirm) { setFlash(res, 'err', '確認のチェックを入れてください'); return res.redirect('/app/contract'); }
   const plan = await earliestCancel(c);
-  const note = `希望：${req.body.when === 'asap' ? `いちばん早い日（${plan.end || '担当者が確認'}）` : String(req.body.date || '').slice(0, 10)}／理由：${String(req.body.reason || '').slice(0, 300) || '（記入なし）'}`;
-  run('UPDATE customers SET cancel_requested_at = ?, cancel_request_note = ? WHERE id = ?', now(), note, c.id);
-  audit(`customer:${c.id}`, 'cancel-request', note);
-  sendMail(mails.cancelReceived(c, plan.end));
-  sendMail(mails.adminNotice(`【解約の申し込み】${c.business_name}`, `${BASE_URL}/admin/customers/${c.id}#cancel\n\n${note}`));
-  setFlash(res, 'ok', '解約のお申し込みを承りました。担当者が内容を確認して、1営業日以内にメールでご連絡します');
+  const wanted = req.body.when === 'date' ? String(req.body.date || '') : plan.end;
+  const reason = String(req.body.reason || '').slice(0, 300);
+  // 解約日が決められない（カード払い以外で公開日も未設定など）ときだけ、担当者が確認する形にする
+  if (!wanted || !/^\d{4}-\d{2}-\d{2}$/.test(wanted)) {
+    const note = `希望：担当者が確認／理由：${reason || '（記入なし）'}`;
+    run('UPDATE customers SET cancel_requested_at = ?, cancel_request_note = ? WHERE id = ?', now(), note, c.id);
+    audit(`customer:${c.id}`, 'cancel-request', note);
+    sendMail(mails.cancelReceived(c, null));
+    sendMail(mails.adminNotice(`【解約の申し込み・要確認】${c.business_name}`, `${BASE_URL}/admin/customers/${c.id}#cancel\n\n${note}`));
+    setFlash(res, 'ok', '解約のお申し込みを承りました。担当者が解約日を確認して、1営業日以内にメールでご連絡します');
+    return res.redirect('/app/contract');
+  }
+  if (plan.end && wanted < plan.end) { setFlash(res, 'err', `解約日は ${plan.end} 以降を選んでください（利用規約 第4条）`); return res.redirect('/app/contract'); }
+  try {
+    await scheduleCancel(c, wanted);
+    run('UPDATE customers SET cancel_requested_at = ?, cancel_request_note = ?, cancel_reason = ? WHERE id = ?', now(), `マイページから解約（${wanted}）`, reason || null, c.id);
+    audit(`customer:${c.id}`, 'cancel-self', `${wanted} ${reason}`);
+    sendMail(mails.cancelScheduled(c, wanted));
+    sendMail(mails.adminNotice(`【解約】${c.business_name}（${wanted}）`, `お客さまがマイページから解約しました。\n${BASE_URL}/admin/customers/${c.id}#cancel\n\n理由：${reason || '（記入なし）'}`));
+    setFlash(res, 'ok', `${wanted} で解約の手続きをしました。確認のメールをお送りしました`);
+  } catch (e) {
+    console.error('[解約の手続きに失敗]', e.message);
+    setFlash(res, 'err', '解約の手続きができませんでした。お手数ですが nishihara@platinum-kikaku.co.jp までご連絡ください');
+  }
+  res.redirect('/app/contract');
+});
+// 解約日より前なら、お客さま自身で取り消せる
+app.post('/app/contract/cancel-undo', requireCustomer, async (req, res) => {
+  const c = req.customer;
+  if (!c.cancel_at || c.cancel_at < ymd(new Date())) return res.redirect('/app/contract');
+  try {
+    await scheduleCancel(c, null);
+    run('UPDATE customers SET cancel_requested_at = NULL, cancel_request_note = NULL, cancel_reason = NULL WHERE id = ?', c.id);
+    audit(`customer:${c.id}`, 'cancel-undo-self', c.cancel_at);
+    sendMail(mails.adminNotice(`【解約の取り消し】${c.business_name}`, `お客さまがマイページから解約を取り消しました（予定していた解約日：${c.cancel_at}）。\n${BASE_URL}/admin/customers/${c.id}`));
+    setFlash(res, 'ok', '解約を取り消しました。これまでどおりご利用いただけます');
+  } catch (e) { setFlash(res, 'err', '取り消しできませんでした。お手数ですが担当者までご連絡ください'); }
   res.redirect('/app/contract');
 });
 

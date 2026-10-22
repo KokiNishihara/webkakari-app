@@ -469,18 +469,20 @@ export function adminBackupsPage({ backups, flash: f }) {
 export function contractPage({ c, billed, plan, flash: f }) {
   const brand = c.business_type === 'clinic' ? '院のWeb係' : '飲食店のWeb係';
   let cancelBlock;
-  if (c.cancel_at) cancelBlock = `<div class="card"><h2 class="sub-h" style="margin-top:0">解約日</h2><p><b>${esc(c.cancel_at)}</b> で解約します。その日まではこれまでどおりご利用いただけます。</p><p class="muted" style="margin-top:8px">ホームページのデータの引き渡しをご希望の場合は、解約日までに nishihara@platinum-kikaku.co.jp へご連絡ください。</p></div>`;
+  if (c.cancel_at) cancelBlock = `<div class="card"><h2 class="sub-h" style="margin-top:0">解約日</h2><p><b>${esc(c.cancel_at)}</b> で解約します。その日まではこれまでどおりご利用いただけます。</p><p class="muted" style="margin-top:8px">ホームページのデータの引き渡しをご希望の場合は、解約日までに nishihara@platinum-kikaku.co.jp へご連絡ください。</p>
+<form method="post" action="/app/contract/cancel-undo" style="margin-top:14px" onsubmit="return confirm('解約を取り消して、これまでどおり続けます。よろしいですか？')"><button class="btn ghost block">解約を取り消す</button></form></div>`;
   else if (c.cancel_requested_at) cancelBlock = `<div class="card"><h2 class="sub-h" style="margin-top:0">解約のお申し込み</h2><p>${when(c.cancel_requested_at)} にお申し込みを承りました。担当者が確認して、メールで解約日をお知らせします。</p><p class="muted" style="margin-top:8px">お申し込みを取り消したい場合は、nishihara@platinum-kikaku.co.jp へご連絡ください。</p></div>`;
-  else cancelBlock = `<details class="card cancel-box"><summary>解約を申し込む</summary>
+  else cancelBlock = `<details class="card cancel-box"><summary>解約の手続き</summary>
 <p style="margin-top:12px">解約をお考えの理由によっては、プランの変更などで解決できることもあります。気になる点があれば、先にマイページから担当者へお気軽にご相談ください。</p>
 <form method="post" action="/app/contract/cancel-request" style="margin-top:14px">
 <label class="f" style="margin-top:0">解約の時期</label>
-<label class="radio"><input type="radio" name="when" value="asap" checked> いちばん早い日${plan.end ? `（${esc(plan.end)}）` : ''}</label>
+<label class="radio"><input type="radio" name="when" value="asap" checked> いちばん早い日${plan.end ? `（${esc(plan.end)}）` : '（担当者が確認してお知らせします）'}</label>
 <label class="radio"><input type="radio" name="when" value="date"> 日付を指定する <input class="input" type="date" name="date" ${plan.end ? `min="${esc(plan.end)}"` : ''} style="width:auto;display:inline-block;margin-left:6px"></label>
 <label class="f">差し支えなければ、理由を教えてください（任意）</label>
 <textarea class="input" name="reason" rows="3" placeholder="例：お店を閉めることになった"></textarea>
 <label class="agree"><input type="checkbox" name="confirm" value="1" required> <span>利用規約 第4条（最低利用期間・解約の時期）を確認しました。解約日までは月額料金のお支払いが続くことを理解しています</span></label>
-<button class="btn danger block" style="margin-top:16px">解約を申し込む</button>
+<p class="muted" style="margin-top:12px">「解約する」を押すと、その場で手続きが完了し、確認のメールが届きます。解約日より前なら、この画面から取り消せます。</p>
+<button class="btn danger block" style="margin-top:12px" onclick="return confirm('解約の手続きをします。よろしいですか？')">解約する</button>
 </form></details>`;
   return `${head('ご契約内容｜Web係')}<body>${topBar(c)}<main class="wrap narrow">${flash(f)}
 <p style="margin-bottom:10px"><a href="/app">← マイページへ</a></p>
