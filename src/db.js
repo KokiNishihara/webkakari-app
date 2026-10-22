@@ -130,6 +130,8 @@ for (const [table, col, def] of [
   ['customers', 'billed_json', 'TEXT'],           // いまStripeで請求している内容（変更の差分確認用）
   ['customers', 'terms_agreed_at', 'INTEGER'],    // 利用規約・特商法への同意（決済画面で記録）
   ['customers', 'pending_quote_json', 'TEXT'],
+  ['customers', 'cancel_at', 'TEXT'],             // 解約日（YYYY-MM-DD）。この日で請求と提供を終える
+  ['customers', 'cancel_reason', 'TEXT'],
   ['requests', 'admin_flag', 'INTEGER NOT NULL DEFAULT 0'],
   ['requests', 'layout_issues', 'TEXT'],
   ['requests', 'reminded_at', 'INTEGER'],         // 確認待ちのお知らせを送った日時（1回だけ）          // 確認画面のスマホ幅点検で見つかった崩れ（あれば公開を止める）  // 一部だけ自動でできた依頼（担当者の対応が残っている）    // 決済リンクを送った時点の見積り（決済完了でこの内容を請求中にする）

@@ -369,6 +369,15 @@ ${c.stripe_subscription_id || (mode === 'mock' && billed)
 ${payUrl ? `<div class="copy" style="margin-top:12px"><input class="input" readonly value="${esc(payUrl)}" data-copy-src><button type="button" class="btn ghost" data-copy>コピー</button></div><p class="hint">14日間有効。新しく作ると前のリンクは使えなくなります。</p>` : ''}
 ${c.stripe_customer_id || mode === 'mock' ? `<form method="post" action="/admin/customers/${c.id}/charge" class="line" style="margin-top:16px"><input class="input" name="label" placeholder="単発の請求（例：ドメイン更新費 2027年分）" list="o-presets"><input class="input n" name="amount" inputmode="numeric" placeholder="金額"><button class="btn ghost">次回の請求に追加</button></form>` : ''}
 ${c.terms_agreed_at ? `<p class="hint" style="margin-top:12px">利用規約などへの同意：${when(c.terms_agreed_at)}</p>` : ''}
+<div id="cancel" style="margin-top:22px;padding-top:16px;border-top:1px solid var(--line)">
+<h3 class="sub-h" style="margin-top:0">解約</h3>
+${c.cancel_at ? `<p>解約日：<b>${esc(c.cancel_at)}</b>（その日まで請求とサービスを続けます）${c.cancel_reason ? `<br><span class="hint">理由：${esc(c.cancel_reason)}</span>` : ''}</p>
+<form method="post" action="/admin/customers/${c.id}/cancel/undo" style="margin-top:8px" onsubmit="return confirm('解約の予約を取り消します。よろしいですか？')"><button class="btn ghost">解約の予約を取り消す</button></form>`
+    : `<p class="hint">お客さまから解約の申し出があったら、解約日を決めて予約します。最低利用期間の終わり：${esc(c.min_term_end || '公開日が未設定')}。規約では、次回の請求日の10日前までの申し出で、その請求日の前日まで。</p>
+<form id="cancel-form" method="post" action="/admin/customers/${c.id}/cancel" class="line" style="margin-top:8px;grid-template-columns:10em 1fr auto" onsubmit="return confirm('この日で解約する予約をします。よろしいですか？')">
+<input class="input" type="date" name="cancel_date" value="${esc(c.min_term_end || '')}" required><input class="input" name="reason" placeholder="理由（社内メモ）"><button class="btn danger">解約を予約する</button></form>
+<label class="hint" style="display:block;margin-top:6px"><input type="checkbox" name="force" value="1" form="cancel-form"> 最低利用期間の途中でも特例で解約する</label>`}
+</div>
 ${audits?.length ? `<details style="margin-top:12px"><summary class="hint">履歴</summary><ul class="hint">${audits.map((a) => `<li>${when(a.created_at)}　${esc(a.action)}　${esc(a.detail || '')}</li>`).join('')}</ul></details>` : ''}
 </div>`;
 }

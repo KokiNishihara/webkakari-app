@@ -65,6 +65,17 @@ function remindReviews(baseUrl) {
   }
 }
 
+// 解約日を過ぎた契約者を「解約」にする（ログイン・HPの表示を止める。データと版は残すので、再開や引き渡しもできる）
+function applyCancellations() {
+  const today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); // 日本時間の今日
+  for (const c of all(`SELECT * FROM customers WHERE cancel_at IS NOT NULL AND cancel_at < ? AND status != 'canceled'`, today)) {
+    run(`UPDATE customers SET status = 'canceled', payment_status = CASE WHEN payment_status = 'active' THEN 'canceled' ELSE payment_status END WHERE id = ?`, c.id);
+    run('DELETE FROM sessions WHERE kind = ? AND user_id = ?', 'customer', c.id);
+    audit('system', 'canceled', `${c.id} ${c.cancel_at}`);
+    sendMail(mails.adminNotice(`【解約】${c.business_name}（${c.cancel_at}）の提供を終了しました`, '管理画面で確認してください。HPのデータと版は残しています。'));
+  }
+}
+
 // 1時間ごとに掃除とリマインド、1日1回バックアップ
 export function startJobs({ baseUrl }) {
   let lastBackupDay = '';
@@ -72,6 +83,7 @@ export function startJobs({ baseUrl }) {
     try {
       cleanup();
       remindReviews(baseUrl);
+      applyCancellations();
       const day = new Date().toISOString().slice(0, 10);
       if (day !== lastBackupDay) { const b = backupNow(); lastBackupDay = day; console.log(`[バックアップ] ${b.name}（${Math.round(b.size / 1024)}KB）`); }
     } catch (e) { console.error('[定期処理の失敗]', e.message); }

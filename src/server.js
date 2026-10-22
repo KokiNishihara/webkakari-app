@@ -12,7 +12,7 @@ import QRCode from 'qrcode';
 import sharp from 'sharp';
 import { ensureAdmin, recoverStuck, startJobs, backupNow, listBackups, BACKUP_DIR } from './jobs.js';
 import { computeQuote, readBillingForm } from './pricing.js';
-import { stripeMode, startCheckout, syncCheckout, markPaid, portalUrl, applyToSubscription, addOneTimeCharge, verifyWebhook, handleEvent } from './billing.js';
+import { stripeMode, startCheckout, syncCheckout, markPaid, portalUrl, applyToSubscription, addOneTimeCharge, verifyWebhook, handleEvent, scheduleCancel } from './billing.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 4900);
@@ -67,7 +67,7 @@ app.use((req, res, next) => {
   const host = String(req.headers.host || '').toLowerCase().split(':')[0];
   if (!host || host === APP_HOST.split(':')[0] || host === 'localhost' || host === '127.0.0.1' || host.endsWith('.onrender.com')) return next();
   const bare = host.replace(/^www\./, '');
-  const site = one('SELECT * FROM sites WHERE domain = ? OR domain = ?', bare, host);
+  const site = one(`SELECT s.* FROM sites s JOIN customers c ON c.id = s.customer_id WHERE (s.domain = ? OR s.domain = ?) AND c.status != 'canceled'`, bare, host);
   if (!site?.live_version_id) return res.status(404).send(V.notFound());
   if (host.startsWith('www.') && site.domain === bare) return res.redirect(301, `https://${bare}${req.originalUrl}`);
   if (req.method !== 'GET' && req.method !== 'HEAD') return res.status(405).end();
@@ -359,7 +359,7 @@ process.on('unhandledRejection', (e) => console.error('[未処理のエラー]',
 // ================= HPの配信 =================
 // 本番の版（だれでも見られる）
 app.get(['/s/:slug', '/s/:slug/*'], (req, res) => {
-  const site = one('SELECT * FROM sites WHERE slug = ?', req.params.slug);
+  const site = one(`SELECT s.* FROM sites s JOIN customers c ON c.id = s.customer_id WHERE s.slug = ? AND c.status != 'canceled'`, req.params.slug);
   if (!site?.live_version_id) return res.status(404).send(V.notFound());
   if (!req.params[0] && !req.path.endsWith('/')) return res.redirect(`/s/${site.slug}/`);
   res.sendFile(req.params[0] || 'index.html', { root: versionDir(site.slug, site.live_version_id), dotfiles: 'deny' });
@@ -494,6 +494,30 @@ app.post('/admin/customers/:id/apply-billing', requireAdmin, async (req, res) =>
   catch (e) { console.error(e); setFlash(res, 'err', `変更できませんでした：${e.message}`); }
   res.redirect(`/admin/customers/${c.id}#billing`);
 });
+// 管理：解約の予約（利用規約 第4条：最低利用期間内は、その終わりまで月額をいただく）
+app.post('/admin/customers/:id/cancel', requireAdmin, async (req, res) => {
+  const c = one('SELECT * FROM customers WHERE id = ?', Number(req.params.id)); if (!c) return res.status(404).send(V.notFound());
+  const date = String(req.body.cancel_date || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { setFlash(res, 'err', '解約日を選んでください'); return res.redirect(`/admin/customers/${c.id}#cancel`); }
+  if (c.min_term_end && date < c.min_term_end && !req.body.force) {
+    setFlash(res, 'err', `最低利用期間（${c.min_term_end}まで）の途中です。規約では期間の終わりまで月額をいただくため、解約日を ${c.min_term_end} 以降にしてください（特例で早める場合は「特例」にチェック）`);
+    return res.redirect(`/admin/customers/${c.id}#cancel`);
+  }
+  try {
+    await scheduleCancel(c, date);
+    run('UPDATE customers SET cancel_reason = ? WHERE id = ?', String(req.body.reason || '').slice(0, 200), c.id);
+    audit(`admin:${req.admin.id}`, 'cancel-schedule', `${c.id} ${date}${req.body.force ? ' 特例' : ''}`);
+    setFlash(res, 'ok', `${date} で解約する予約をしました。その日まで請求とサービスを続けます`);
+  } catch (e) { console.error(e.message); setFlash(res, 'err', `予約できませんでした：${e.message}`); }
+  res.redirect(`/admin/customers/${c.id}#cancel`);
+});
+app.post('/admin/customers/:id/cancel/undo', requireAdmin, async (req, res) => {
+  const c = one('SELECT * FROM customers WHERE id = ?', Number(req.params.id)); if (!c) return res.status(404).send(V.notFound());
+  try { await scheduleCancel(c, null); audit(`admin:${req.admin.id}`, 'cancel-undo', String(c.id)); setFlash(res, 'ok', '解約の予約を取り消しました'); }
+  catch (e) { setFlash(res, 'err', e.message); }
+  res.redirect(`/admin/customers/${c.id}#cancel`);
+});
+
 // 管理：単発の請求（次回の月額と一緒に）
 app.post('/admin/customers/:id/charge', requireAdmin, async (req, res) => {
   const c = one('SELECT * FROM customers WHERE id = ?', Number(req.params.id)); if (!c) return res.status(404).send(V.notFound());
@@ -592,7 +616,7 @@ app.get('/admin/customers/:id', requireAdmin, (req, res) => {
   const requests = all(`SELECT r.*, ${firstText} AS first_text FROM requests r WHERE customer_id = ? ORDER BY updated_at DESC`, c.id);
   const inviteUrl = req.query.invite ? `${BASE_URL}/set-password?token=${req.query.invite}` : null;
   const payUrl = req.query.paylink ? `${BASE_URL}/pay/${req.query.paylink}` : null;
-  const audits = all(`SELECT * FROM audit_log WHERE (action IN ('billing-save','billing-apply','charge','paylink') AND (detail = ? OR detail LIKE ?)) OR actor = ? ORDER BY id DESC LIMIT 12`, String(c.id), `${c.id} %`, `customer:${c.id}`);
+  const audits = all(`SELECT * FROM audit_log WHERE (action IN ('billing-save','billing-apply','charge','paylink','cancel-schedule','cancel-undo') AND (detail = ? OR detail LIKE ?)) OR actor = ? ORDER BY id DESC LIMIT 12`, String(c.id), `${c.id} %`, `customer:${c.id}`);
   res.send(V.adminCustomerPage({ c, site, versions, requests, inviteUrl, payUrl, quote: quoteOf(c), billed: c.billed_json ? JSON.parse(c.billed_json) : null, mode: stripeMode(), audits, flash: takeFlash(req, res) }));
 });
 app.post('/admin/customers/:id', requireAdmin, (req, res) => {

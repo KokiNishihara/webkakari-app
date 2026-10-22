@@ -117,6 +117,15 @@ export async function applyToSubscription(c, quote) {
   return {};
 }
 
+// 解約の予約：指定日で Stripe の月額請求を止める（その日までは通常どおり請求される）。cancelDate=null で取り消し
+export async function scheduleCancel(c, cancelDate) {
+  run('UPDATE customers SET cancel_at = ? WHERE id = ?', cancelDate, c.id);
+  if (stripeMode() === 'mock' || !c.stripe_subscription_id) return { mock: stripeMode() === 'mock' };
+  const at = cancelDate ? Math.floor(new Date(`${cancelDate}T23:59:59+09:00`).getTime() / 1000) : '';
+  await stripe().subscriptions.update(c.stripe_subscription_id, { cancel_at: at, proration_behavior: 'none' });
+  return {};
+}
+
 // 単発の請求（ドメインの更新費・追加の制作など）。次回の月額と一緒に請求する
 export async function addOneTimeCharge(c, { label, amount }) {
   if (stripeMode() === 'mock') return { mock: true };
