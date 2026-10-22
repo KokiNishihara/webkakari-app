@@ -10,6 +10,7 @@ import { sendMail, mails } from './mail.js';
 import { newSecret, verifyTotp, otpauthUrl } from './totp.js';
 import QRCode from 'qrcode';
 import sharp from 'sharp';
+import { seoInject, robotsTxt, sitemapXml } from './seo.js';
 import { ensureAdmin, recoverStuck, startJobs, backupNow, listBackups, BACKUP_DIR } from './jobs.js';
 import { computeQuote, readBillingForm } from './pricing.js';
 import { stripeMode, startCheckout, syncCheckout, markPaid, portalUrl, applyToSubscription, addOneTimeCharge, verifyWebhook, handleEvent, scheduleCancel, nextBillingDate, invoicesForMonth } from './billing.js';
@@ -73,9 +74,29 @@ app.use((req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return res.status(405).end();
   const rel = decodeURIComponent(req.path).replace(/^\/+/, '') || 'index.html';
   if (rel.includes('..')) return res.status(400).end();
-  res.setHeader('Cache-Control', rel.endsWith('.html') ? 'public, max-age=60' : 'public, max-age=86400');
-  res.sendFile(rel.endsWith('/') ? rel + 'index.html' : rel, { root: versionDir(site.slug, site.live_version_id), dotfiles: 'deny' }, (err) => { if (err && !res.headersSent) res.status(404).send(V.notFound()); });
+  const origin = `https://${site.domain}`;
+  if (rel === 'robots.txt') return res.type('text/plain').send(robotsTxt(origin));
+  if (rel === 'sitemap.xml') {
+    const v = one('SELECT created_at FROM versions WHERE id = ?', site.live_version_id);
+    return res.type('application/xml').send(sitemapXml(origin, new Date(v.created_at).toISOString().slice(0, 10)));
+  }
+  sendSitePage(req, res, site, rel);
 });
+
+// HPのページを返す。HTMLには検索対策（説明文・正規URL・構造化データ）を自動で入れる
+function sendSitePage(req, res, site, rel, versionId = site.live_version_id) {
+  const root = versionDir(site.slug, versionId);
+  const file = rel.endsWith('/') ? rel + 'index.html' : rel;
+  if (file.endsWith('.html')) {
+    let html;
+    try { html = readFileSync(path.join(root, path.normalize(file).replace(/^(\.\.[/\\])+/, '')), 'utf8'); } catch { return res.status(404).send(V.notFound()); }
+    const customer = one('SELECT * FROM customers WHERE id = ?', site.customer_id);
+    res.setHeader('Cache-Control', 'public, max-age=60');
+    return res.type('html').send(seoInject(html, { site, customer, baseUrl: BASE_URL }));
+  }
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(file, { root, dotfiles: 'deny' }, (err) => { if (err && !res.headersSent) res.status(404).send(V.notFound()); });
+}
 
 // Stripe からの通知は、署名の確認のため加工前の本文で受け取る（JSONの読み込みより前に置く）
 app.post('/stripe/webhook', express.raw({ type: 'application/json', limit: '1mb' }), (req, res) => {
@@ -113,6 +134,7 @@ const setFlash = (res, type, msg) => res.cookie('flash', JSON.stringify({ type, 
 const takeFlash = (req, res) => { if (!req.cookies.flash) return null; res.clearCookie('flash', { path: '/' }); try { return JSON.parse(req.cookies.flash); } catch { return null; } };
 
 const requireCustomer = (req, res, next) => {
+  V.setViewAs(req.cookies.asview || null);
   const s = readSession(req.cookies.sid, 'customer');
   if (!s) return res.redirect('/login');
   req.customer = one('SELECT * FROM customers WHERE id = ?', s.user_id);
@@ -134,10 +156,11 @@ app.post('/login', (req, res) => {
   if (!r.ok) return res.status(401).send(V.loginPage({ flash: { type: 'err', msg: r.msg }, email: req.body.email }));
   if (r.user.status === 'canceled') return res.status(403).send(V.loginPage({ flash: { type: 'err', msg: 'ご契約が終了しているため、ログインできません' } }));
   res.cookie('sid', createSession('customer', r.user.id), cookieOptions());
+  res.clearCookie('asview', { path: '/' });
   audit(`customer:${r.user.id}`, 'login');
   res.redirect('/app');
 });
-app.post('/logout', (req, res) => { destroySession(req.cookies.sid); res.clearCookie('sid', { path: '/' }); res.redirect('/login'); });
+app.post('/logout', (req, res) => { destroySession(req.cookies.sid); res.clearCookie('sid', { path: '/' }); res.clearCookie('asview', { path: '/' }); res.redirect('/login'); });
 
 function validToken(token) {
   const t = one('SELECT * FROM tokens WHERE token = ?', String(token || ''));
@@ -362,7 +385,8 @@ app.get(['/s/:slug', '/s/:slug/*'], (req, res) => {
   const site = one(`SELECT s.* FROM sites s JOIN customers c ON c.id = s.customer_id WHERE s.slug = ? AND c.status != 'canceled'`, req.params.slug);
   if (!site?.live_version_id) return res.status(404).send(V.notFound());
   if (!req.params[0] && !req.path.endsWith('/')) return res.redirect(`/s/${site.slug}/`);
-  res.sendFile(req.params[0] || 'index.html', { root: versionDir(site.slug, site.live_version_id), dotfiles: 'deny' });
+  if (req.params[0] === 'robots.txt') return res.type('text/plain').send(site.domain ? 'User-agent: *\nDisallow: /\n' : robotsTxt(`${BASE_URL}/s/${site.slug}`));
+  sendSitePage(req, res, site, req.params[0] || 'index.html');
 });
 // 確認用の版（そのお客さまと管理者だけが見られる）
 app.get(['/p/:slug/v:vid', '/p/:slug/v:vid/*'], (req, res) => {
@@ -641,12 +665,24 @@ app.post('/admin/login', (req, res) => {
   const r = attemptLogin('admins', req.body.email, req.body.password);
   if (!r.ok) return res.status(401).send(V.adminLoginPage({ flash: { type: 'err', msg: r.msg } }));
   // パスワードの次に、二段階認証（6桁コード）へ
+  // 30日以内に6桁のコードを入れた端末なら、コードを聞かずに入る
+  const trust = readSession(req.cookies.atrust, 'admin_trust');
+  if (r.user.totp_secret && trust && trust.user_id === r.user.id) {
+    res.cookie('asid', createSession('admin', r.user.id), { ...cookieOptions(), maxAge: 12 * 3600 * 1000 });
+    audit(`admin:${r.user.id}`, 'login', 'trusted-device');
+    return res.redirect('/admin');
+  }
   res.cookie('amfa', createSession('admin_mfa', r.user.id), { ...cookieOptions(), maxAge: 10 * 60 * 1000 });
   res.redirect(r.user.totp_secret ? '/admin/mfa' : '/admin/mfa/setup');
 });
 const mfaUser = (req) => { const s = readSession(req.cookies.amfa, 'admin_mfa'); return s && one('SELECT * FROM admins WHERE id = ?', s.user_id); };
 function finishAdminLogin(req, res, admin) {
   destroySession(req.cookies.amfa); res.clearCookie('amfa', { path: '/' });
+  if (req.body.remember) { // この端末を30日間記憶する
+    const t = newToken();
+    run('INSERT INTO sessions (token, kind, user_id, expires_at) VALUES (?,?,?,?)', t, 'admin_trust', admin.id, now() + 30 * 24 * 3600 * 1000);
+    res.cookie('atrust', t, { ...cookieOptions(), maxAge: 30 * 24 * 3600 * 1000 });
+  }
   res.cookie('asid', createSession('admin', admin.id), { ...cookieOptions(), maxAge: 12 * 3600 * 1000 });
   audit(`admin:${admin.id}`, 'login');
   res.redirect('/admin');
@@ -747,6 +783,16 @@ app.post('/admin/customers/:id', requireAdmin, (req, res) => {
   setFlash(res, 'ok', '保存しました');
   res.redirect(`/admin/customers/${id}`);
 });
+// お客さまの画面で見る（パスワードなしで、そのお客さまのマイページを開く。操作の記録を残す）
+app.post('/admin/customers/:id/view-as', requireAdmin, (req, res) => {
+  const c = one('SELECT * FROM customers WHERE id = ?', Number(req.params.id)); if (!c) return res.status(404).send(V.notFound());
+  res.cookie('sid', createSession('customer', c.id), { ...cookieOptions(), maxAge: 2 * 3600 * 1000 });
+  res.cookie('asview', c.business_name, { ...cookieOptions(), maxAge: 2 * 3600 * 1000 });
+  audit(`admin:${req.admin.id}`, 'view-as', String(c.id));
+  res.redirect('/app');
+});
+app.post('/admin/view-as/end', (req, res) => { destroySession(req.cookies.sid); res.clearCookie('sid', { path: '/' }); res.clearCookie('asview', { path: '/' }); res.redirect('/admin'); });
+
 // 独自ドメインの登録（DNSでこのサーバーに向けたあとに登録すると、そのドメインでHPが表示される）
 app.post('/admin/sites/:id/domain', requireAdmin, (req, res) => {
   const site = one('SELECT * FROM sites WHERE id = ?', Number(req.params.id)); if (!site) return res.status(404).send(V.notFound());

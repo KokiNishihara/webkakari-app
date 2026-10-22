@@ -77,7 +77,9 @@ export function forgotPage({ flash: f }) {
 }
 
 // ---------- お客さま：ホーム ----------
-const topBar = (c) => `<header class="top"><div class="in"><a class="brand" href="/app">${MARK}${esc(c.business_type === 'clinic' ? '院のWeb係' : '飲食店のWeb係')}</a>
+let viewAs = null;
+export const setViewAs = (v) => { viewAs = v; };
+const topBar = (c) => `${viewAs ? `<div class="viewas">管理者として「${esc(c.business_name)}」の画面を表示しています。ここでの操作はお客さまの操作として記録されます。<form method="post" action="/admin/view-as/end"><button>表示を終える</button></form></div>` : ''}<header class="top"><div class="in"><a class="brand" href="/app">${MARK}${esc(c.business_type === 'clinic' ? '院のWeb係' : '飲食店のWeb係')}</a>
 <div class="right"><form method="post" action="/logout"><button class="btn quiet">ログアウト</button></form></div></div></header>`;
 
 const CHIPS_FOOD = ['営業時間を変えたい', '臨時休業を知らせたい', 'メニュー・価格を変えたい', '写真を変えたい', 'お知らせを載せたい'];
@@ -177,6 +179,7 @@ export function adminLoginPage({ flash: f }) {
 export function adminMfaPage({ flash: f }) {
   return `${head('二段階認証｜Web係 管理')}<body class="admin"><main class="auth"><h1>確認コード</h1><p class="lead">認証アプリに表示されている6桁の数字を入れてください。</p><div class="card">${flash(f)}
 <form method="post" action="/admin/mfa"><label class="f" for="code">6桁のコード</label><input class="input" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required autofocus>
+<label class="show-pw"><input type="checkbox" name="remember" value="1" checked> この端末では30日間コードを聞かない</label>
 <button class="btn block" style="margin-top:20px">ログイン</button></form></div></main></body></html>`;
 }
 export function adminMfaSetupPage({ qr, secret, flash: f }) {
@@ -185,6 +188,7 @@ export function adminMfaSetupPage({ qr, secret, flash: f }) {
 <img src="${qr}" alt="二段階認証のQRコード" style="margin:16px auto;width:200px;height:200px">
 <p class="hint" style="text-align:center">読み取れない場合は、このキーを手入力：<br><code style="word-break:break-all">${esc(secret)}</code></p>
 <form method="post" action="/admin/mfa/setup"><label class="f" for="code">6桁のコード</label><input class="input" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
+<label class="show-pw"><input type="checkbox" name="remember" value="1" checked> この端末では30日間コードを聞かない</label>
 <button class="btn block" style="margin-top:20px">設定してログイン</button></form></div></main></body></html>`;
 }
 
@@ -264,7 +268,7 @@ export function adminCustomerPage({ c, site, versions, requests, inviteUrl, payU
 <p class="crumb"><a href="/admin">ダッシュボード</a> ／ 契約者</p>
 <div class="page-top"><div><h1>${esc(c.business_name)}</h1>
 <p class="sub">${c.business_type === 'clinic' ? '院のWeb係' : '飲食店のWeb係'}　${tag(STAT[c.status] || [c.status, 'mute'])}　${tag(PAY[c.payment_status] || [c.payment_status, 'mute'])}${c.cancel_at ? `　<span class="st st-ng">${esc(c.cancel_at)} 解約予定</span>` : ''}</p></div>
-${site ? `<a class="btn ghost" href="/s/${esc(site.slug)}/" target="_blank" rel="noopener">HPを見る</a>` : ''}</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><form method="post" action="/admin/customers/${c.id}/view-as" target="_blank"><button class="btn ghost">お客さまの画面で見る</button></form>${site ? `<a class="btn ghost" href="/s/${esc(site.slug)}/" target="_blank" rel="noopener">HPを見る</a>` : ''}</div></div>
 <dl class="facts-row">
 <div><dt>月額（税込）</dt><dd class="num">${yenA(c.monthly_fee)}</dd></div>
 <div><dt>お支払い</dt><dd>${esc(METHOD[c.payment_method] || '')}</dd></div>
