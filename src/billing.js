@@ -126,6 +126,26 @@ export async function scheduleCancel(c, cancelDate) {
   return {};
 }
 
+// 次回の請求日（カード払いの契約のみ。Stripe のサブスクリプションから読む）
+export async function nextBillingDate(c) {
+  if (stripeMode() === 'mock' || !c.stripe_subscription_id) return null;
+  const sub = await stripe().subscriptions.retrieve(c.stripe_subscription_id);
+  const end = sub.items?.data?.[0]?.current_period_end ?? sub.current_period_end;
+  return end ? new Date(end * 1000) : null;
+}
+
+// ある月に作られた Stripe の請求書（カード払いの入金状況）。Stripe の顧客ID → 請求書の一覧
+export async function invoicesForMonth(month) {
+  if (stripeMode() === 'mock') return {};
+  const [y, m] = month.split('-').map(Number);
+  const gte = Math.floor(Date.UTC(y, m - 1, 1, -9) / 1000), lt = Math.floor(Date.UTC(y, m, 1, -9) / 1000); // 日本時間の月初〜翌月初
+  const out = {};
+  for await (const inv of stripe().invoices.list({ created: { gte, lt }, limit: 100 })) {
+    (out[inv.customer] ||= []).push({ id: inv.id, number: inv.number, status: inv.status, due: inv.amount_due, paid: inv.amount_paid, created: inv.created * 1000, attempts: inv.attempt_count });
+  }
+  return out;
+}
+
 // 単発の請求（ドメインの更新費・追加の制作など）。次回の月額と一緒に請求する
 export async function addOneTimeCharge(c, { label, amount }) {
   if (stripeMode() === 'mock') return { mock: true };

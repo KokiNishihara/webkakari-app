@@ -12,7 +12,7 @@ import QRCode from 'qrcode';
 import sharp from 'sharp';
 import { ensureAdmin, recoverStuck, startJobs, backupNow, listBackups, BACKUP_DIR } from './jobs.js';
 import { computeQuote, readBillingForm } from './pricing.js';
-import { stripeMode, startCheckout, syncCheckout, markPaid, portalUrl, applyToSubscription, addOneTimeCharge, verifyWebhook, handleEvent, scheduleCancel } from './billing.js';
+import { stripeMode, startCheckout, syncCheckout, markPaid, portalUrl, applyToSubscription, addOneTimeCharge, verifyWebhook, handleEvent, scheduleCancel, nextBillingDate, invoicesForMonth } from './billing.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 4900);
@@ -494,6 +494,80 @@ app.post('/admin/customers/:id/apply-billing', requireAdmin, async (req, res) =>
   catch (e) { console.error(e); setFlash(res, 'err', `変更できませんでした：${e.message}`); }
   res.redirect(`/admin/customers/${c.id}#billing`);
 });
+// ================= お客さま：ご契約内容・解約の申し込み =================
+const ymd = (d) => new Date(d.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 10); // 日本時間の日付
+// 規約 第4条：最低利用期間の後は月単位。次回の請求日の10日前までの申し出で、その請求日の前日に終了
+async function earliestCancel(c) {
+  let next = null;
+  try { next = await nextBillingDate(c); } catch (e) { console.warn('[次回請求日の取得に失敗]', e.message); }
+  let end = null;
+  if (next) {
+    const d = new Date(next);
+    if ((d - Date.now()) < 10 * 24 * 3600 * 1000) d.setMonth(d.getMonth() + 1); // 10日を切っていたら翌月
+    d.setDate(d.getDate() - 1);
+    end = ymd(d);
+  }
+  if (c.min_term_end && (!end || end < c.min_term_end)) end = c.min_term_end;
+  return { next: next ? ymd(next) : null, end };
+}
+app.get('/app/contract', requireCustomer, async (req, res) => {
+  const c = req.customer;
+  const plan = await earliestCancel(c);
+  res.send(V.contractPage({ c, billed: c.billed_json ? JSON.parse(c.billed_json) : null, plan, flash: takeFlash(req, res) }));
+});
+app.post('/app/contract/cancel-request', requireCustomer, async (req, res) => {
+  const c = req.customer;
+  if (c.cancel_at || c.cancel_requested_at) { setFlash(res, 'ok', 'すでに解約のお申し込みを承っています'); return res.redirect('/app/contract'); }
+  if (!req.body.confirm) { setFlash(res, 'err', '確認のチェックを入れてください'); return res.redirect('/app/contract'); }
+  const plan = await earliestCancel(c);
+  const note = `希望：${req.body.when === 'asap' ? `いちばん早い日（${plan.end || '担当者が確認'}）` : String(req.body.date || '').slice(0, 10)}／理由：${String(req.body.reason || '').slice(0, 300) || '（記入なし）'}`;
+  run('UPDATE customers SET cancel_requested_at = ?, cancel_request_note = ? WHERE id = ?', now(), note, c.id);
+  audit(`customer:${c.id}`, 'cancel-request', note);
+  sendMail(mails.cancelReceived(c, plan.end));
+  sendMail(mails.adminNotice(`【解約の申し込み】${c.business_name}`, `${BASE_URL}/admin/customers/${c.id}#cancel\n\n${note}`));
+  setFlash(res, 'ok', '解約のお申し込みを承りました。担当者が内容を確認して、1営業日以内にメールでご連絡します');
+  res.redirect('/app/contract');
+});
+
+// ================= 管理：今月のお支払い =================
+const thisMonth = () => ymd(new Date()).slice(0, 7);
+app.get('/admin/payments', requireAdmin, async (req, res) => {
+  const month = /^\d{4}-\d{2}$/.test(String(req.query.month)) ? req.query.month : thisMonth();
+  const customers = all(`SELECT * FROM customers WHERE status != 'canceled' OR (cancel_at IS NOT NULL AND substr(cancel_at, 1, 7) >= ?) ORDER BY business_name`, month);
+  let invoices = {}, stripeError = null;
+  try { invoices = await invoicesForMonth(month); } catch (e) { stripeError = e.message; }
+  const manual = Object.fromEntries(all('SELECT * FROM payments WHERE month = ?', month).map((p) => [p.customer_id, p]));
+  const rows = customers.filter((c) => c.payment_status !== 'pending' || manual[c.id]).map((c) => {
+    if (c.payment_method !== 'card' || !c.stripe_customer_id) {
+      const p = manual[c.id];
+      return { c, kind: 'manual', state: p ? 'paid' : 'unpaid', amount: p?.amount ?? c.monthly_fee, date: p?.paid_on, payment: p };
+    }
+    const list = invoices[c.stripe_customer_id] || [];
+    const unpaid = list.filter((i) => i.status === 'open' || i.status === 'uncollectible');
+    const paid = list.filter((i) => i.status === 'paid');
+    const state = unpaid.length ? (c.payment_status === 'past_due' ? 'failed' : 'unpaid') : paid.length ? 'paid' : 'notyet';
+    const inv = unpaid[0] || paid[0];
+    return { c, kind: 'card', state, amount: inv ? (unpaid.length ? inv.due : inv.paid) : c.monthly_fee, date: inv ? ymd(new Date(inv.created)) : null, invoice: inv };
+  });
+  res.send(V.adminPaymentsPage({ month, rows, stripeError, flash: takeFlash(req, res) }));
+});
+app.post('/admin/payments', requireAdmin, (req, res) => {
+  const cid = Number(req.body.customer_id), month = String(req.body.month);
+  const amount = Math.round(Number(String(req.body.amount || '').normalize('NFKC').replace(/[,円\s]/g, '')));
+  if (!/^\d{4}-\d{2}$/.test(month) || !(amount > 0) || !/^\d{4}-\d{2}-\d{2}$/.test(String(req.body.paid_on))) { setFlash(res, 'err', '月・金額・入金日を入れてください'); return res.redirect(`/admin/payments?month=${month}`); }
+  run('INSERT OR REPLACE INTO payments (customer_id, month, amount, paid_on, note, created_by, created_at) VALUES (?,?,?,?,?,?,?)', cid, month, amount, req.body.paid_on, String(req.body.note || '').slice(0, 200), `admin:${req.admin.id}`, now());
+  run(`UPDATE customers SET payment_status = 'active' WHERE id = ? AND payment_status IN ('pending','past_due')`, cid);
+  audit(`admin:${req.admin.id}`, 'payment-record', `${cid} ${month} ${amount}`);
+  setFlash(res, 'ok', '入金を記録しました');
+  res.redirect(`/admin/payments?month=${month}`);
+});
+app.post('/admin/payments/:id/delete', requireAdmin, (req, res) => {
+  const p = one('SELECT * FROM payments WHERE id = ?', Number(req.params.id));
+  if (p) { run('DELETE FROM payments WHERE id = ?', p.id); audit(`admin:${req.admin.id}`, 'payment-delete', `${p.customer_id} ${p.month}`); }
+  setFlash(res, 'ok', '入金の記録を取り消しました');
+  res.redirect(`/admin/payments?month=${p?.month || thisMonth()}`);
+});
+
 // 管理：解約の予約（利用規約 第4条：最低利用期間内は、その終わりまで月額をいただく）
 app.post('/admin/customers/:id/cancel', requireAdmin, async (req, res) => {
   const c = one('SELECT * FROM customers WHERE id = ?', Number(req.params.id)); if (!c) return res.status(404).send(V.notFound());
@@ -507,13 +581,14 @@ app.post('/admin/customers/:id/cancel', requireAdmin, async (req, res) => {
     await scheduleCancel(c, date);
     run('UPDATE customers SET cancel_reason = ? WHERE id = ?', String(req.body.reason || '').slice(0, 200), c.id);
     audit(`admin:${req.admin.id}`, 'cancel-schedule', `${c.id} ${date}${req.body.force ? ' 特例' : ''}`);
-    setFlash(res, 'ok', `${date} で解約する予約をしました。その日まで請求とサービスを続けます`);
+    if (req.body.notify) sendMail(mails.cancelScheduled(c, date));
+    setFlash(res, 'ok', `${date} で解約する予約をしました。その日まで請求とサービスを続けます${req.body.notify ? '（お客さまにメールでお知らせしました）' : ''}`);
   } catch (e) { console.error(e.message); setFlash(res, 'err', `予約できませんでした：${e.message}`); }
   res.redirect(`/admin/customers/${c.id}#cancel`);
 });
 app.post('/admin/customers/:id/cancel/undo', requireAdmin, async (req, res) => {
   const c = one('SELECT * FROM customers WHERE id = ?', Number(req.params.id)); if (!c) return res.status(404).send(V.notFound());
-  try { await scheduleCancel(c, null); audit(`admin:${req.admin.id}`, 'cancel-undo', String(c.id)); setFlash(res, 'ok', '解約の予約を取り消しました'); }
+  try { await scheduleCancel(c, null); run('UPDATE customers SET cancel_requested_at = NULL, cancel_request_note = NULL WHERE id = ?', c.id); audit(`admin:${req.admin.id}`, 'cancel-undo', String(c.id)); setFlash(res, 'ok', '解約の予約を取り消しました'); }
   catch (e) { setFlash(res, 'err', e.message); }
   res.redirect(`/admin/customers/${c.id}#cancel`);
 });
@@ -576,6 +651,7 @@ app.get('/admin', requireAdmin, (req, res) => {
   const customers = all('SELECT * FROM customers ORDER BY created_at DESC');
   const queue = all(`SELECT r.*, c.business_name, c.business_type, ${firstText} AS first_text FROM requests r JOIN customers c ON c.id = r.customer_id
     WHERE (r.status IN ('needs_admin','failed') OR r.admin_flag = 1) AND r.status NOT IN ('discarded','published') ORDER BY r.updated_at`);
+  const cancelRequests = customers.filter((c) => c.cancel_requested_at && !c.cancel_at && c.status !== 'canceled');
   const live = customers.filter((c) => c.status !== 'canceled');
   const paying = live.filter((c) => c.payment_status === 'active');
   const stats = {
@@ -587,7 +663,8 @@ app.get('/admin', requireAdmin, (req, res) => {
     pastDue: live.filter((c) => c.payment_status === 'past_due').length,
     canceling: live.filter((c) => c.cancel_at).length,
   };
-  res.send(V.adminDashboard({ stats, queue, customers, flash: takeFlash(req, res) }));
+  stats.attention += cancelRequests.length;
+  res.send(V.adminDashboard({ stats, queue, cancelRequests, customers, flash: takeFlash(req, res) }));
 });
 app.get('/admin/customers/new', requireAdmin, (req, res) => res.send(V.adminCustomerNew({})));
 

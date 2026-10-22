@@ -98,6 +98,19 @@ CREATE TABLE IF NOT EXISTS tokens (    -- 初回パスワード設定・再設�
   used_at INTEGER
 );
 
+-- 口座振替・請求書払いの入金の記録（カード払いは Stripe の請求書から読む）
+CREATE TABLE IF NOT EXISTS payments (
+  id INTEGER PRIMARY KEY,
+  customer_id INTEGER NOT NULL REFERENCES customers(id),
+  month TEXT NOT NULL,                  -- 'YYYY-MM'（何月分か）
+  amount INTEGER NOT NULL,
+  paid_on TEXT NOT NULL,                -- 入金日 YYYY-MM-DD
+  note TEXT,
+  created_by TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  UNIQUE (customer_id, month)
+);
+
 -- 小さな設定値（Stripeの商品IDなど）
 CREATE TABLE IF NOT EXISTS settings (
   k TEXT PRIMARY KEY,
@@ -132,6 +145,8 @@ for (const [table, col, def] of [
   ['customers', 'pending_quote_json', 'TEXT'],
   ['customers', 'cancel_at', 'TEXT'],             // 解約日（YYYY-MM-DD）。この日で請求と提供を終える
   ['customers', 'cancel_reason', 'TEXT'],
+  ['customers', 'cancel_requested_at', 'INTEGER'], // お客さまがマイページから解約を申し込んだ日時
+  ['customers', 'cancel_request_note', 'TEXT'],     // 申し込み時の希望日・理由
   ['requests', 'admin_flag', 'INTEGER NOT NULL DEFAULT 0'],
   ['requests', 'layout_issues', 'TEXT'],
   ['requests', 'reminded_at', 'INTEGER'],         // 確認待ちのお知らせを送った日時（1回だけ）          // 確認画面のスマホ幅点検で見つかった崩れ（あれば公開を止める）  // 一部だけ自動でできた依頼（担当者の対応が残っている）    // 決済リンクを送った時点の見積り（決済完了でこの内容を請求中にする）

@@ -104,7 +104,7 @@ export function homePage({ customer: c, site, requests, flash: f }) {
 ${site ? `<div class="card site-card"><div class="ico">${ICON.globe}</div><div><b>${esc(c.business_name)}</b><div class="url">${esc(site.domain || 'いまのホームページ')}</div></div><a class="btn ghost" href="${siteUrl}" target="_blank" rel="noopener">見る</a></div>` : ''}
 <h2 class="sec-h">これまでのご依頼</h2>${list}
 <p class="muted" style="margin-top:22px">デザインの変更やページの追加は、担当者がお見積りしてからご案内します。</p>
-<p class="muted" style="margin-top:8px"><a href="/app/billing">お支払い情報・領収書</a></p>
+<p class="muted" style="margin-top:8px"><a href="/app/billing">お支払い情報・領収書</a>　／　<a href="/app/contract">ご契約内容・解約</a></p>
 </main>${composer(c, { action: '/app/requests', placeholder: '例：木曜日を休みにしたい' })}</body></html>`;
 }
 
@@ -165,7 +165,7 @@ ${stepsFor(r.status)}
 
 // ---------- 管理画面 ----------
 const adminTop = () => `<header class="top"><div class="in"><a class="brand" href="/admin">${MARK}Web係 管理</a>
-<div class="right"><a class="btn quiet" href="/admin">ダッシュボード</a><a class="btn quiet" href="/admin/customers/new">契約者を追加</a><a class="btn quiet" href="/admin/backups">バックアップ</a><form method="post" action="/admin/logout"><button class="btn quiet">ログアウト</button></form></div></div></header>`;
+<div class="right"><a class="btn quiet" href="/admin">ダッシュボード</a><a class="btn quiet" href="/admin/payments">お支払い</a><a class="btn quiet" href="/admin/customers/new">契約者を追加</a><a class="btn quiet" href="/admin/backups">バックアップ</a><form method="post" action="/admin/logout"><button class="btn quiet">ログアウト</button></form></div></div></header>`;
 
 export function adminLoginPage({ flash: f }) {
   return `${head('管理ログイン')}<body class="admin"><main class="auth"><h1>Web係 管理画面</h1><div class="card">${flash(f)}
@@ -195,7 +195,7 @@ const STAT = { onboarding: ['準備中', 'warn'], active: ['契約中', 'ok'], c
 const METHOD = { card: 'カード', bank_debit: '口座振替', invoice: '請求書' };
 const tag = ([label, tone]) => `<span class="st st-${tone}">${esc(label)}</span>`;
 
-export function adminDashboard({ stats, queue, customers, flash: f }) {
+export function adminDashboard({ stats, queue, cancelRequests = [], customers, flash: f }) {
   const today = new Date().toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' });
   return `${head('ダッシュボード｜Web係 管理')}<body class="admin">${adminTop()}<main class="wrap">${flash(f)}
 <div class="page-top"><div><h1>ダッシュボード</h1><p class="sub">${esc(today)}</p></div><a class="btn" href="/admin/customers/new">契約者を追加</a></div>
@@ -216,6 +216,10 @@ ${queue.length ? `<ul class="queue">${queue.map((r) => `<li><a href="/admin/r/${
     : `<p class="empty-line">対応待ちの依頼はありません。AIで対応できない依頼や、表示の崩れが見つかった修正がここに入ります。</p>`}
 </section>
 
+${cancelRequests.length ? `<section class="panel">
+<div class="panel-h"><h2>解約の申し込み</h2><span class="count">${cancelRequests.length}件</span></div>
+<ul class="queue">${cancelRequests.map((c) => `<li><a href="/admin/customers/${c.id}#cancel"><span class="q-st"><span class="st st-ng">解約申込</span></span>
+<span class="q-main"><b>${esc(c.business_name)}</b><span class="q-text">${esc(c.cancel_request_note || '')}</span></span><time>${ago(c.cancel_requested_at)}</time></a></li>`).join('')}</ul></section>` : ''}
 <section class="panel">
 <div class="panel-h"><h2>契約者</h2><span class="count" data-count>${customers.length}件</span></div>
 <div class="toolbar">
@@ -422,10 +426,11 @@ ${c.terms_agreed_at ? `<p class="hint" style="margin-top:12px">利用規約な�
 <h3 class="sub-h" style="margin-top:0">解約</h3>
 ${c.cancel_at ? `<p>解約日：<b>${esc(c.cancel_at)}</b>（その日まで請求とサービスを続けます）${c.cancel_reason ? `<br><span class="hint">理由：${esc(c.cancel_reason)}</span>` : ''}</p>
 <form method="post" action="/admin/customers/${c.id}/cancel/undo" style="margin-top:8px" onsubmit="return confirm('解約の予約を取り消します。よろしいですか？')"><button class="btn ghost">解約の予約を取り消す</button></form>`
-    : `<p class="hint">お客さまから解約の申し出があったら、解約日を決めて予約します。最低利用期間の終わり：${esc(c.min_term_end || '公開日が未設定')}。規約では、次回の請求日の10日前までの申し出で、その請求日の前日まで。</p>
+    : `${c.cancel_requested_at ? `<div class="warn" style="margin-bottom:10px">マイページから解約の申し込みがありました（${when(c.cancel_requested_at)}）<br>${esc(c.cancel_request_note || '')}</div>` : ''}<p class="hint">お客さまから解約の申し出があったら、解約日を決めて予約します。最低利用期間の終わり：${esc(c.min_term_end || '公開日が未設定')}。規約では、次回の請求日の10日前までの申し出で、その請求日の前日まで。</p>
 <form id="cancel-form" method="post" action="/admin/customers/${c.id}/cancel" class="line" style="margin-top:8px;grid-template-columns:10em 1fr auto" onsubmit="return confirm('この日で解約する予約をします。よろしいですか？')">
 <input class="input" type="date" name="cancel_date" value="${esc(c.min_term_end || '')}" required><input class="input" name="reason" placeholder="理由（社内メモ）"><button class="btn danger">解約を予約する</button></form>
-<label class="hint" style="display:block;margin-top:6px"><input type="checkbox" name="force" value="1" form="cancel-form"> 最低利用期間の途中でも特例で解約する</label>`}
+<label class="hint" style="display:block;margin-top:6px"><input type="checkbox" name="notify" value="1" form="cancel-form" checked> お客さまに解約日をメールでお知らせする</label>
+<label class="hint" style="display:block;margin-top:2px"><input type="checkbox" name="force" value="1" form="cancel-form"> 最低利用期間の途中でも特例で解約する</label>`}
 </div>
 ${audits?.length ? `<details style="margin-top:12px"><summary class="hint">履歴</summary><ul class="hint">${audits.map((a) => `<li>${when(a.created_at)}　${esc(a.action)}　${esc(a.detail || '')}</li>`).join('')}</ul></details>` : ''}
 </div>`;
@@ -457,5 +462,80 @@ export function adminBackupsPage({ backups, flash: f }) {
 <p class="hint">契約者・依頼・料金などのデータ（DB）を毎日自動で保存しています（14日分）。HPのファイルは版ごとにすべて残しています。サーバーのディスク自体も Render が毎日スナップショットを取っています。月に1回は、ここから手元（会社のPC）にも保存してください。</p>
 <form method="post" action="/admin/backups" style="margin:14px 0"><button class="btn ghost">いまバックアップを作る</button></form>
 <table class="t"><tr><th>ファイル</th><th>大きさ</th><th></th></tr>${backups.map((b) => `<tr><td>${esc(b.name)}</td><td>${Math.round(b.size / 1024).toLocaleString()} KB</td><td><a href="/admin/backups/${esc(b.name)}">手元に保存</a></td></tr>`).join('') || '<tr><td colspan="3" class="muted">まだありません</td></tr>'}</table>
+</main></body></html>`;
+}
+
+// ---------- お客さま：ご契約内容・解約 ----------
+export function contractPage({ c, billed, plan, flash: f }) {
+  const brand = c.business_type === 'clinic' ? '院のWeb係' : '飲食店のWeb係';
+  let cancelBlock;
+  if (c.cancel_at) cancelBlock = `<div class="card"><h2 class="sub-h" style="margin-top:0">解約日</h2><p><b>${esc(c.cancel_at)}</b> で解約します。その日まではこれまでどおりご利用いただけます。</p><p class="muted" style="margin-top:8px">ホームページのデータの引き渡しをご希望の場合は、解約日までに nishihara@platinum-kikaku.co.jp へご連絡ください。</p></div>`;
+  else if (c.cancel_requested_at) cancelBlock = `<div class="card"><h2 class="sub-h" style="margin-top:0">解約のお申し込み</h2><p>${when(c.cancel_requested_at)} にお申し込みを承りました。担当者が確認して、メールで解約日をお知らせします。</p><p class="muted" style="margin-top:8px">お申し込みを取り消したい場合は、nishihara@platinum-kikaku.co.jp へご連絡ください。</p></div>`;
+  else cancelBlock = `<details class="card cancel-box"><summary>解約を申し込む</summary>
+<p style="margin-top:12px">解約をお考えの理由によっては、プランの変更などで解決できることもあります。気になる点があれば、先にマイページから担当者へお気軽にご相談ください。</p>
+<form method="post" action="/app/contract/cancel-request" style="margin-top:14px">
+<label class="f" style="margin-top:0">解約の時期</label>
+<label class="radio"><input type="radio" name="when" value="asap" checked> いちばん早い日${plan.end ? `（${esc(plan.end)}）` : ''}</label>
+<label class="radio"><input type="radio" name="when" value="date"> 日付を指定する <input class="input" type="date" name="date" ${plan.end ? `min="${esc(plan.end)}"` : ''} style="width:auto;display:inline-block;margin-left:6px"></label>
+<label class="f">差し支えなければ、理由を教えてください（任意）</label>
+<textarea class="input" name="reason" rows="3" placeholder="例：お店を閉めることになった"></textarea>
+<label class="agree"><input type="checkbox" name="confirm" value="1" required> <span>利用規約 第4条（最低利用期間・解約の時期）を確認しました。解約日までは月額料金のお支払いが続くことを理解しています</span></label>
+<button class="btn danger block" style="margin-top:16px">解約を申し込む</button>
+</form></details>`;
+  return `${head('ご契約内容｜Web係')}<body>${topBar(c)}<main class="wrap narrow">${flash(f)}
+<p style="margin-bottom:10px"><a href="/app">← マイページへ</a></p>
+<h1 class="page-h">ご契約内容</h1>
+<div class="card">
+<dl class="facts" style="margin-top:0">
+<div><dt>サービス</dt><dd>${esc(brand)}</dd></div>
+<div><dt>月額（税込）</dt><dd>${Number(c.monthly_fee).toLocaleString('ja-JP')}円</dd></div>
+<div><dt>お支払い方法</dt><dd>${esc({ card: 'クレジットカード', bank_debit: '口座振替', invoice: '請求書' }[c.payment_method] || '')}</dd></div>
+${plan.next ? `<div><dt>次回のお支払い</dt><dd>${esc(plan.next)}</dd></div>` : ''}
+<div><dt>公開日</dt><dd>${esc(c.contract_start || 'まだ公開していません')}</dd></div>
+<div><dt>最低利用期間</dt><dd>${c.min_term_end ? `${esc(c.min_term_end)} まで` : '公開日から6か月'}</dd></div>
+</dl>
+${billed ? `<p class="muted" style="margin-top:12px">明細は「<a href="/app/billing">お支払い情報・領収書</a>」で確認できます。</p>` : ''}
+</div>
+<h2 class="sec-h">解約について</h2>
+<p class="muted" style="margin-bottom:12px">最低利用期間（公開日から6か月）のあとは、月単位で解約できます。次回のお支払い日の10日前までのお申し込みで、その前日に解約となります（利用規約 第4条）。違約金はありません。</p>
+${cancelBlock}
+<p class="muted" style="margin-top:16px"><a href="/legal/${c.business_type === 'clinic' ? 'clinic' : 'food'}/terms.html" target="_blank" rel="noopener">利用規約を見る</a></p>
+</main></body></html>`;
+}
+
+// ---------- 管理：今月のお支払い ----------
+export function adminPaymentsPage({ month, rows, stripeError, flash: f }) {
+  const [y, m] = month.split('-').map(Number);
+  const shift = (d) => { const t = new Date(Date.UTC(y, m - 1 + d, 1)); return t.toISOString().slice(0, 7); };
+  const S = { paid: ['入金済み', 'ok'], unpaid: ['未入金', 'warn'], failed: ['決済失敗', 'ng'], notyet: ['請求日前', 'mute'] };
+  const order = { failed: 0, unpaid: 1, notyet: 2, paid: 3 };
+  rows = [...rows].sort((a, b) => order[a.state] - order[b.state]);
+  const sum = (st) => rows.filter((r) => r.state === st).reduce((s, r) => s + (r.amount || 0), 0);
+  const cnt = (st) => rows.filter((r) => r.state === st).length;
+  return `${head('お支払い｜Web係 管理')}<body class="admin">${adminTop()}<main class="wrap">${flash(f)}
+<div class="page-top"><div><h1>${y}年${m}月のお支払い</h1><p class="sub">カード払いは Stripe の請求書から自動で反映。口座振替・請求書払いは、入金を確認したらここで記録します。</p></div>
+<div class="seg"><a class="btn quiet" href="/admin/payments?month=${shift(-1)}">← 前の月</a><a class="btn quiet" href="/admin/payments?month=${shift(1)}">次の月 →</a></div></div>
+${stripeError ? `<div class="warn" style="margin-bottom:14px">Stripe から請求書を読めませんでした：${esc(stripeError)}</div>` : ''}
+<section class="stats" aria-label="今月の集計">
+<div class="stat lead"><span class="lbl">入金済み</span><b>${yenA(sum('paid'))}</b><span class="note">${cnt('paid')}件</span></div>
+<div class="stat ${cnt('failed') ? 'is-ng' : ''}"><span class="lbl">決済失敗</span><b>${cnt('failed')}<small>件</small></b><span class="note">${yenA(sum('failed'))}</span></div>
+<div class="stat ${cnt('unpaid') ? 'is-warn' : ''}"><span class="lbl">未入金</span><b>${cnt('unpaid')}<small>件</small></b><span class="note">${yenA(sum('unpaid'))}</span></div>
+<div class="stat"><span class="lbl">請求日前</span><b>${cnt('notyet')}<small>件</small></b><span class="note">今月これから請求</span></div>
+</section>
+<section class="panel"><div class="panel-h"><h2>契約者ごと</h2><span class="count">${rows.length}件</span></div>
+${rows.length ? `<div class="tbl-wrap"><table class="t2"><thead><tr><th>店名・医院名</th><th>方法</th><th class="r">金額（税込）</th><th>状態</th><th>日付</th><th></th></tr></thead><tbody>
+${rows.map((r) => `<tr><td><a class="nm" href="/admin/customers/${r.c.id}">${esc(r.c.business_name)}</a><span class="em">${esc(r.c.contact_name)}</span></td>
+<td>${esc(METHOD[r.c.payment_method] || '')}</td>
+<td class="r num">${yenA(r.amount)}</td>
+<td>${tag(S[r.state])}${r.invoice?.attempts > 1 ? `<span class="em">決済の試行 ${r.invoice.attempts} 回</span>` : ''}</td>
+<td class="num">${esc(r.date || '—')}</td>
+<td>${r.kind === 'card'
+    ? (r.invoice ? `<a href="https://dashboard.stripe.com/invoices/${esc(r.invoice.id)}" target="_blank" rel="noopener">Stripeで見る</a>` : '')
+    : r.payment
+      ? `<form method="post" action="/admin/payments/${r.payment.id}/delete" onsubmit="return confirm('入金の記録を取り消します。よろしいですか？')"><button class="btn quiet">記録を取り消す</button></form>`
+      : `<form method="post" action="/admin/payments" class="pay-form"><input type="hidden" name="customer_id" value="${r.c.id}"><input type="hidden" name="month" value="${esc(month)}"><input class="input" name="amount" value="${r.amount}" inputmode="numeric" aria-label="金額"><input class="input" type="date" name="paid_on" value="${new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10)}" aria-label="入金日"><button class="btn ghost">入金を記録</button></form>`}</td></tr>`).join('')}
+</tbody></table></div>` : '<p class="empty-line">この月にお支払いの対象となる契約者はいません。</p>'}
+</section>
+<p class="hint">「決済失敗」はカードの期限切れなどで引き落とせなかったものです。Stripe が数日おきに自動で再試行し、お客さまにはカードの登録し直しをお願いするメールが届いています。</p>
 </main></body></html>`;
 }

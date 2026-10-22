@@ -322,3 +322,11 @@ table.t2{width:100%;border-collapse:collapse;font-size:14px}
 .admin .input{min-height:40px;padding:8px 12px;font-size:14.5px}
 .admin .btn{min-height:44px}
 .admin label.f{margin-top:14px}
+.cancel-box summary{cursor:pointer;color:var(--text-2);font-weight:600}
+.radio{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:15px}
+.pay-form{display:flex;gap:6px;align-items:center}.pay-form .input{width:7.5em;min-height:36px;padding:6px 8px;font-size:13.5px}.pay-form input[type=date]{width:10.5em}.pay-form .btn{min-height:36px;padding:0 12px;font-size:13.5px;white-space:nowrap}
+.page-top .seg .btn{border-radius:0}
+.admin .top .brand{white-space:nowrap}
+.admin .top .right{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+.admin .top .right::-webkit-scrollbar{display:none}
+.admin .top .btn.quiet{white-space:nowrap;padding:0 10px;font-size:14px}
