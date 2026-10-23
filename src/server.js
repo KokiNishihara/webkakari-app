@@ -49,6 +49,10 @@ function sendServiceSite(req, res, key, relPath, origin) {
     return res.type('html').send(html);
   }
   res.setHeader('Cache-Control', 'public, max-age=86400');
+  if (file === 'shiryo.pdf') { // 保存したときのファイル名を「飲食店のWeb係_ご案内資料.pdf」などにする
+    const name = `${key.startsWith('clinic') ? '院のWeb係' : '飲食店のWeb係'}_ご案内資料.pdf`;
+    res.setHeader('Content-Disposition', `inline; filename="shiryo.pdf"; filename*=UTF-8''${encodeURIComponent(name)}`);
+  }
   res.sendFile(full);
 }
 app.use((req, res, next) => {
