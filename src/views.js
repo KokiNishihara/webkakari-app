@@ -167,7 +167,7 @@ ${stepsFor(r.status)}
 
 // ---------- 管理画面 ----------
 const adminTop = () => `<header class="top"><div class="in"><a class="brand" href="/admin">${MARK}Web係 管理</a>
-<div class="right"><a class="btn quiet" href="/admin">ダッシュボード</a><a class="btn quiet" href="/admin/payments">お支払い</a><a class="btn quiet" href="/admin/customers/new">契約者を追加</a><a class="btn quiet" href="/admin/backups">バックアップ</a><form method="post" action="/admin/logout"><button class="btn quiet">ログアウト</button></form></div></div></header>`;
+<div class="right"><a class="btn quiet" href="/admin">ダッシュボード</a><a class="btn quiet" href="/admin/payments">お支払い</a><a class="btn quiet" href="/admin/customers/new">契約者を追加</a><a class="btn quiet" href="/admin/backups">バックアップ</a><a class="btn quiet" href="/admin/health">停止リスク点検</a><form method="post" action="/admin/logout"><button class="btn quiet">ログアウト</button></form></div></div></header>`;
 
 export function adminLoginPage({ flash: f }) {
   return `${head('管理ログイン')}<body class="admin"><main class="auth"><h1>Web係 管理画面</h1><div class="card">${flash(f)}
@@ -466,6 +466,30 @@ export function adminBackupsPage({ backups, flash: f }) {
 <p class="hint">契約者・依頼・料金などのデータ（DB）を毎日自動で保存しています（14日分）。HPのファイルは版ごとにすべて残しています。サーバーのディスク自体も Render が毎日スナップショットを取っています。月に1回は、ここから手元（会社のPC）にも保存してください。</p>
 <form method="post" action="/admin/backups" style="margin:14px 0"><button class="btn ghost">いまバックアップを作る</button></form>
 <table class="t"><tr><th>ファイル</th><th>大きさ</th><th></th></tr>${backups.map((b) => `<tr><td>${esc(b.name)}</td><td>${Math.round(b.size / 1024).toLocaleString()} KB</td><td><a href="/admin/backups/${esc(b.name)}">手元に保存</a></td></tr>`).join('') || '<tr><td colspan="3" class="muted">まだありません</td></tr>'}</table>
+</main></body></html>`;
+}
+
+export function adminHealthPage({ r, offsite, card, flash: f }) {
+  const tag = { ng: ['要対応', '#B42318', '#FEF3F2'], warn: ['注意', '#B54708', '#FFFAEB'], info: ['お知らせ', '#175CD3', '#EFF8FF'], ok: ['問題なし', '#067647', '#ECFDF3'] };
+  const rows = r ? r.items.map((x) => `<tr><td style="white-space:nowrap"><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;color:${tag[x.level][1]};background:${tag[x.level][2]}">${tag[x.level][0]}</span></td><td style="white-space:nowrap">${esc(x.area)}</td><td><b>${esc(x.title)}</b>${x.detail ? `<div class="muted" style="margin-top:2px">${esc(x.detail)}</div>` : ''}</td></tr>`).join('') : '<tr><td colspan="3" class="muted">まだ点検していません。「いま点検する」を押してください</td></tr>';
+  return `${head('停止リスク点検｜Web係 管理')}<body class="admin">${adminTop()}<main class="wrap" style="max-width:960px">${flash(f)}
+<h1>停止リスク点検</h1>
+<p class="hint">お客さまのHPが止まる原因になりそうなことを点検します。毎週月曜の9時に自動で点検してメールで送ります。独自ドメインの表示は毎朝7時に確かめ、問題があればすぐメールします。外部（Cloudflare R2）へのバックアップは毎朝4時です。</p>
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin:16px 0">
+<form method="post" action="/admin/health/run"><button class="btn">いま点検する</button></form>
+<form method="post" action="/admin/health/offsite"><button class="btn ghost" ${offsite ? '' : 'disabled title="R2 の設定が必要です"'}>いま外部にバックアップする</button></form>
+</div>
+${r ? `<p class="muted">前回の点検：${when(r.at)}　要対応 ${r.ng} 件／注意 ${r.warn} 件（点検には1〜2分かかることがあります）</p>` : ''}
+<table class="t" style="margin-top:8px"><tr><th>結果</th><th>分類</th><th>内容</th></tr>${rows}</table>
+<h2 class="sub-h">Render の支払いカード</h2>
+<p class="hint">Render（全店のHPを動かしているサーバー）の支払いが止まると、全店のHPが同時に止まります。カードの有効期限を入れておくと、2か月前から点検で知らせます。</p>
+<form method="post" action="/admin/health/card" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><input class="input" name="card" placeholder="2028-05" value="${esc(card)}" style="width:140px"><button class="btn ghost">登録する</button></form>
+<h2 class="sub-h">毎週、手で確かめること</h2>
+<ul style="margin-left:1.2em;line-height:2">
+<li>GitHub から「監視（uptime）」の失敗メールが来ていないか（来ていれば、その時間にHPが止まっていた）</li>
+<li>今週のシステム更新（Manual Deploy）は、お店の営業時間外に行ったか</li>
+<li>上の表に「要対応」が残っていないか</li>
+</ul>
 </main></body></html>`;
 }
 

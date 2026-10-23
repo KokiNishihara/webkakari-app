@@ -12,6 +12,8 @@ import QRCode from 'qrcode';
 import sharp from 'sharp';
 import { seoInject, robotsTxt, sitemapXml } from './seo.js';
 import { ensureAdmin, recoverStuck, startJobs, backupNow, listBackups, BACKUP_DIR } from './jobs.js';
+import { runCheck, lastCheck, offsiteBackup, offsiteReady, quickStatus, startHealthJobs } from './health.js';
+import { getSetting, setSetting } from './db.js';
 import { computeQuote, readBillingForm } from './pricing.js';
 import { stripeMode, startCheckout, syncCheckout, markPaid, portalUrl, applyToSubscription, addOneTimeCharge, verifyWebhook, handleEvent, scheduleCancel, nextBillingDate, invoicesForMonth } from './billing.js';
 
@@ -26,6 +28,8 @@ const APP_HOST = new URL(BASE_URL).host;
 
 // 死活確認（Render のヘルスチェック用）。DB が読めることまで確かめる
 app.get('/healthz', (req, res) => { try { one('SELECT 1 AS ok'); res.send('ok'); } catch { res.status(500).send('db error'); } });
+// 外部の監視（GitHub Actions）が5分ごとに見る。DB・ディスク・HPのファイルを確かめる（お客さまの情報は返さない）
+app.get('/healthz/full', (req, res) => { const p = quickStatus(); res.set('Cache-Control', 'no-store'); p.length ? res.status(503).send('ng: ' + p.join(',')) : res.send('ok'); });
 
 // 営業用のサービスサイト（院のWeb係・飲食店のWeb係）。SERVICE_DOMAIN_CLINIC / SERVICE_DOMAIN_FOOD のドメインで来たら返す。
 // 中身は scripts/sync-service-sites.mjs で service-sites/ に取り込んだもの。確認用に /service/clinic/・/service/food/ でも見られる
@@ -818,6 +822,25 @@ app.get('/admin/backups/:name', requireAdmin, (req, res) => {
   res.download(path.join(BACKUP_DIR, name));
 });
 
+// 停止リスクの点検（毎週月曜9時に自動・ここから手動でも）
+app.get('/admin/health', requireAdmin, (req, res) => res.send(V.adminHealthPage({ r: lastCheck(), offsite: offsiteReady(), card: getSetting('render_card_exp') || '', flash: takeFlash(req, res) })));
+app.post('/admin/health/run', requireAdmin, async (req, res) => {
+  try { const r = await runCheck(); setFlash(res, r.ng ? 'err' : 'ok', `点検しました：要対応 ${r.ng} 件／注意 ${r.warn} 件`); }
+  catch (e) { setFlash(res, 'err', e.message); }
+  res.redirect('/admin/health');
+});
+app.post('/admin/health/offsite', requireAdmin, async (req, res) => {
+  try { const b = await offsiteBackup(); audit(`admin:${req.admin.id}`, 'offsite-backup-manual', b.day); setFlash(res, 'ok', `外部（R2）に保存しました（${Math.round(b.size / 1024)}KB）`); }
+  catch (e) { setFlash(res, 'err', `外部への保存に失敗しました：${e.message}`); }
+  res.redirect('/admin/health');
+});
+app.post('/admin/health/card', requireAdmin, (req, res) => {
+  const v = String(req.body.card || '');
+  if (!/^\d{4}-\d{2}$/.test(v)) { setFlash(res, 'err', '有効期限は「2028-05」の形で入れてください'); return res.redirect('/admin/health'); }
+  setSetting('render_card_exp', v); audit(`admin:${req.admin.id}`, 'render-card', v);
+  setFlash(res, 'ok', `Render の支払いカードの有効期限を ${v} で登録しました`); res.redirect('/admin/health');
+});
+
 app.post('/admin/sites/:id/upload', requireAdmin, (req, res) => {
   const site = one('SELECT * FROM sites WHERE id = ?', Number(req.params.id));
   const html = Buffer.from(String(req.body.html_b64 || ''), 'base64').toString('utf8');
@@ -879,4 +902,5 @@ app.use((err, req, res, next) => { console.error(err); res.status(500).send('エ
 ensureAdmin();
 recoverStuck();
 startJobs({ baseUrl: BASE_URL });
+startHealthJobs({ baseUrl: BASE_URL });
 app.listen(PORT, () => console.log(`Web係 管理システム: ${BASE_URL}  （AI: ${process.env.ANTHROPIC_API_KEY ? 'Claude' : '仮の動作'}／決済: ${{ mock: '仮の決済', test: 'Stripeテスト', live: 'Stripe本番' }[stripeMode()]}）`));

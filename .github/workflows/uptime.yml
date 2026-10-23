@@ -1,0 +1,21 @@
+# 外部からの死活監視：5分ごとに本番サーバーを確かめ、止まっていれば失敗にする。
+# 失敗すると GitHub からリポジトリの持ち主（西原）にメールが届く（GitHub の通知設定で Actions のメールをオンにしておく）。
+name: uptime
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: サーバーの状態（DB・ディスク・HPのファイル）
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o body.txt -w '%{http_code}' --max-time 20 https://webkakari-app.onrender.com/healthz/full || echo 000)
+            if [ "$code" = "200" ]; then echo "ok"; exit 0; fi
+            echo "試行$i：$code $(cat body.txt 2>/dev/null)"; sleep 20
+          done
+          echo "::error::本番サーバーが応答していません（全店のHPが止まっている可能性があります）"
+          exit 1
