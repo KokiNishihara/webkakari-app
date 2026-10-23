@@ -10,7 +10,7 @@ import sharp from 'sharp';
 const SRC = path.join(os.homedir(), '仕事/05_HP制作保守事業');
 const OUT = path.resolve('service-sites');
 const SITES = { clinic: 'service-site', food: 'service-site-food' };
-const ENTRY = ['index.html', 'tokushoho.html', 'privacy.html'];
+const ENTRY = ['index.html', 'tokushoho.html', 'privacy.html', 'shiryo.pdf']; // shiryo.pdf＝営業資料（PDF）
 // デザインの見本（架空の店・医院）。各サービスサイトの中の mihon/<名前>/ に入れる（例：/service/food/mihon/toshin/）
 const MIHON = {
   'food/mihon/toshin': '見本_高級和食_灯心', 'food/mihon/shirahi': '見本_寿司', 'food/mihon/suginoya': '見本_蕎麦',
