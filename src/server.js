@@ -56,12 +56,14 @@ app.use((req, res, next) => {
   const key = serviceDomains()[host];
   if (!key) return next();
   if (host.startsWith('www.')) return res.redirect(301, `https://${host.slice(4)}${req.originalUrl}`);
+  if (!req.path.endsWith('/') && !/\.[a-z0-9]+$/i.test(req.path) && existsSync(path.join(SERVICE_DIR, key, decodeURIComponent(req.path), 'index.html'))) return res.redirect(301, req.originalUrl.replace(/(\?|$)/, '/$1'));
   sendServiceSite(req, res, key, req.path, `https://${host}`);
 });
 app.get(['/service/:key', '/service/:key/*'], (req, res) => {
   const key = ['clinic', 'food'].includes(req.params.key) ? req.params.key : null;
   if (!key) return res.status(404).send(V.notFound());
   if (!req.params[0] && !req.path.endsWith('/')) return res.redirect(`/service/${key}/`);
+  if (req.params[0] && !req.path.endsWith('/') && !/\.[a-z0-9]+$/i.test(req.path) && existsSync(path.join(SERVICE_DIR, key, decodeURIComponent(req.params[0]), 'index.html'))) return res.redirect(301, req.originalUrl.replace(/(\?|$)/, '/$1'));
   res.setHeader('X-Robots-Tag', 'noindex'); // 確認用のURLは検索に出さない
   sendServiceSite(req, res, key, req.params[0] || '', BASE_URL + `/service/${key}`);
 });

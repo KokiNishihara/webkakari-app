@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>炭火焼肉 ひの字｜葛飾・立石（デザイン見本）</title>
+<meta name="description" content="京成立石の炭火焼肉店のデザイン見本です（架空の店）。黒毛和牛の一頭買い、タレと塩、宴会は2階座敷で最大24名。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Oswald:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* Lenis（外部CSSは読まず、必要な分だけ） */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+.lenis.lenis-stopped{overflow:hidden}
+
+:root{
+  --sumi:#1E1915;      /* 炭：基本の背景（茶みのある墨） */
+  --sumi-2:#28211B;    /* 交互の面 */
+  --sumi-3:#140F0C;    /* いちばん暗い帯 */
+  --text:#EFE6D8;      /* 文字 */
+  --mute:#ADA192;      /* 補足の文字 */
+  --line:rgba(239,230,216,.15);
+  --kin:#D9A441;       /* 炭火の金：予約ボタン・価格・今日の行だけ */
+
+  --display:"Dela Gothic One","Zen Kaku Gothic New",sans-serif;
+  --gothic:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic Medium",sans-serif;
+  --num:"Oswald","Zen Kaku Gothic New",sans-serif;
+  --gutter:clamp(16px,5vw,72px);
+  --max:1240px;
+  --hd:72px;
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--sumi);color:var(--text);font-family:var(--gothic);font-weight:500;font-size:16px;line-height:1.85;letter-spacing:.03em;
+  overflow-wrap:anywhere;line-break:strict;text-autospace:normal;text-spacing-trim:trim-start;font-kerning:none;-webkit-font-smoothing:antialiased;overflow-x:clip}
+h1,h2,h3{margin:0;line-height:1.35;font-feature-settings:"palt";letter-spacing:.04em;font-kerning:normal}
+@supports (word-break:auto-phrase){h1,h2,h3,.lead{word-break:auto-phrase;text-wrap:balance}}
+p{margin:0}
+a{color:inherit}
+img{display:block;max-width:100%}
+:focus-visible{outline:2px solid var(--kin);outline-offset:3px;border-radius:2px}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
+.n{font-family:var(--num);font-weight:500;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.nw{white-space:nowrap}
+
+/* ③ 煙と炭のグレイン */
+body::after{content:"";position:fixed;inset:-60px;pointer-events:none;z-index:200;opacity:.11;mix-blend-mode:overlay;
+  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation:grain 1s steps(3) infinite}
+@keyframes grain{0%{transform:translate(0,0)}33%{transform:translate(-20px,12px)}66%{transform:translate(14px,-18px)}}
+
+/* ボタン */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:var(--kin);color:#1E1915;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:.06em;
+  padding:16px 28px;border-radius:4px;transition:background .2s,transform .2s}
+.btn:hover{background:#E6B65A}
+.btn:active{transform:translateY(1px)}
+.tel-link{display:inline-flex;align-items:baseline;gap:10px;text-decoration:none;font-size:13px;color:var(--mute)}
+.tel-link .n{font-size:26px;color:var(--text);transition:color .2s}
+.tel-link:hover .n{color:var(--kin)}
+
+/* ヘッダー */
+.hd{position:fixed;inset:0 0 auto;z-index:50;padding-top:var(--safe-t);transition:background .35s}
+.hd.is-solid{background:rgba(30,25,21,.92);backdrop-filter:blur(8px)}
+.hd-in{display:flex;align-items:center;justify-content:space-between;gap:20px;height:var(--hd);padding:0 var(--gutter)}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo b{font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.06em}
+.logo small{font-size:12px;color:var(--mute);line-height:1.4;letter-spacing:.08em}
+.nav{display:flex;align-items:center;gap:28px;font-size:14px}
+.nav>a:not(.btn){text-decoration:none;padding:6px 0;border-bottom:1px solid transparent;transition:border-color .2s}
+.nav>a:not(.btn):hover{border-color:var(--text)}
+.nav .btn{padding:10px 18px;font-size:14px}
+.nav .hd-tel{font-family:var(--num);font-size:18px;letter-spacing:.04em}
+
+/* FV */
+.fv{position:relative;height:100svh;min-height:640px;max-height:1000px;display:grid;grid-template-columns:minmax(0,47fr) minmax(0,53fr);overflow:hidden}
+.fv-photo{position:relative;grid-column:2;grid-row:1;overflow:hidden}
+.fv-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:46% 40%}
+.fv-photo::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(30,25,21,.7) 0%,rgba(30,25,21,0) 16%)}
+.fv-in{grid-column:1;grid-row:1;display:flex;flex-direction:column;justify-content:flex-end;padding:calc(var(--hd) + var(--safe-t) + 32px) clamp(28px,3.4vw,56px) clamp(48px,8vh,88px) var(--gutter)}
+.fv h1{font-family:var(--display);font-weight:400;font-size:clamp(44px,6.4vw,96px);line-height:1.14;letter-spacing:0}
+.fv h1 .ln{display:block;white-space:nowrap}
+.fv .lead{margin-top:clamp(20px,3.4vh,32px);max-width:25em;font-size:clamp(15px,1.2vw,16px);line-height:1.95;color:#E2D8C8}
+.fv-act{margin-top:clamp(24px,4vh,36px);display:flex;flex-wrap:wrap;align-items:center;gap:14px 28px}
+.fv-today{margin-top:clamp(24px,4vh,40px);padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline}
+.fv-today b{color:var(--text);font-size:14px;font-weight:700}
+.fv-today .n{font-size:16px;color:var(--text)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--kin);margin-right:8px;vertical-align:1px}
+.is-open .dot{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+
+/* 1文字ずつ（FVの見出しだけ） */
+.split .ch{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.06em}
+.split .ch>span{display:inline-block;transform:translateY(-110%);filter:blur(6px);
+  animation:drop .6s cubic-bezier(.22,1,.36,1) forwards;animation-delay:calc(.25s + var(--i)*65ms)}
+@keyframes drop{to{transform:none;filter:none}}
+
+/* こだわり */
+.kd{padding:clamp(110px,14vw,180px) 0 clamp(90px,11vw,140px)}
+.kd-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px 64px;align-items:end;margin-bottom:clamp(48px,6vw,80px)}
+.kd-head h2{font-size:clamp(30px,3.8vw,50px);font-weight:900}
+.kd-head p{color:var(--mute);max-width:28em}
+.kd-main{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px clamp(32px,5vw,72px);align-items:center}
+.kd-main figure{margin:0;border-radius:6px 6px 6px 90px;overflow:hidden;aspect-ratio:4/3}
+.kd-main img{width:100%;height:100%;object-fit:cover;object-position:70% 50%}
+.kd h3{font-size:clamp(22px,2.2vw,28px);font-weight:700;margin-bottom:16px}
+.kd .body{color:#DDD3C3;max-width:26em}
+.kd .note{margin-top:14px;font-size:13px;color:var(--mute)}
+.kd-sub{margin-top:clamp(72px,9vw,120px);display:grid;grid-template-columns:minmax(0,7fr) minmax(0,4fr);gap:56px clamp(32px,5vw,72px);align-items:start}
+.kd-sub figure{margin:0 0 24px;overflow:hidden;border-radius:6px}
+.kd-tare figure{aspect-ratio:16/9}
+.kd-sumi{margin-top:clamp(40px,8vw,120px)}
+.kd-sumi figure{aspect-ratio:4/5}
+.kd-sub img{width:100%;height:100%;object-fit:cover}
+.kd-tare img{object-position:50% 45%}
+
+/* ② 部位メニュー（横スクロール） */
+.parts{background:var(--sumi-3);position:relative}
+.parts-pin{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:calc(var(--hd) + 28px + var(--safe-t)) 0 48px;overflow:hidden}
+.parts-head{max-width:none;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:16px 40px;margin-bottom:clamp(28px,4vh,48px)}
+.parts-head h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,4.6vw,64px);line-height:1.1}
+.parts-head p{color:var(--mute);font-size:14px;max-width:30em}
+.parts-count{font-family:var(--num);font-size:15px;color:var(--mute);letter-spacing:.08em}
+.parts-count b{color:var(--kin);font-size:22px;font-weight:500}
+.track{display:flex;gap:clamp(28px,3.4vw,56px);padding:0 var(--gutter);width:max-content;will-change:transform}
+.part{flex:none;display:flex;flex-direction:column}
+.part figure{margin:0;height:clamp(240px,46vh,440px);aspect-ratio:var(--ar,4/3);overflow:hidden;border-radius:4px;background:#2a221c}
+.part img{width:100%;height:100%;object-fit:cover}
+.part:nth-child(even){padding-top:clamp(20px,5vh,56px)}
+.part-meta{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:4px 20px;margin-top:18px;max-width:100%}
+.part h3{font-size:clamp(22px,2vw,28px);font-weight:900}
+.part .price{font-family:var(--num);font-size:clamp(26px,2.4vw,32px);color:var(--kin);font-weight:500;line-height:1}
+.part .price small{font-family:var(--gothic);font-size:13px;margin-left:2px;color:var(--mute)}
+.part .how{grid-column:1/-1;font-size:13px;color:var(--mute)}
+.part .how b{color:var(--text);font-weight:700;margin-right:10px}
+.part p.say{grid-column:1/-1;font-size:14px;color:#DDD3C3;max-width:22em}
+.part-end{flex:none;align-self:center;width:min(320px,70vw);padding-left:8px}
+.part-end p{font-size:14px;color:var(--mute)}
+.part-end a{display:inline-block;margin-top:14px;font-weight:700;color:var(--kin);text-underline-offset:5px}
+.parts-hint{display:none}
+
+/* コース・飲み放題 */
+.course{background:var(--sumi-2);padding:clamp(100px,12vw,160px) 0}
+.course h2{font-size:clamp(28px,3.2vw,42px);font-weight:900}
+.course-grid{margin-top:48px;display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:56px clamp(40px,5vw,80px);align-items:start}
+table{width:100%;border-collapse:collapse}
+caption{text-align:left;font-weight:700;font-size:15px;padding-bottom:14px;color:var(--mute)}
+th,td{text-align:left;vertical-align:top;padding:22px 0;border-bottom:1px solid var(--line)}
+thead th{font-size:12px;color:var(--mute);font-weight:500;padding:0 0 10px;border-bottom:1px solid var(--line)}
+.c-name{width:30%;padding-right:24px}
+.c-name b{display:block;font-size:20px;font-weight:900}
+.c-name span{font-size:13px;color:var(--mute);font-weight:500}
+.c-body{font-size:14px;color:#DDD3C3;padding-right:24px}
+.c-price{text-align:right;white-space:nowrap}
+.c-price .n{font-size:30px;color:var(--kin)}
+.c-price small{font-size:13px;color:var(--mute)}
+tr.pick .c-name b::after{content:"いちばん人気";display:inline-block;margin-left:10px;font-size:12px;font-weight:700;color:#1E1915;background:var(--kin);padding:1px 8px;border-radius:2px;vertical-align:3px}
+.drink td,.drink th{padding:16px 0}
+.drink th{font-weight:700;font-size:16px}
+.drink td{text-align:right}
+.drink td .n{font-size:24px}
+.drink .sub{display:block;font-size:12px;font-weight:500;color:var(--mute)}
+.course-note{margin-top:28px;font-size:13px;color:var(--mute)}
+
+/* 宴会・個室 */
+.enkai{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);min-height:88vh}
+.enkai figure{margin:0;position:relative;overflow:hidden}
+.enkai figure img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:40% 50%}
+.enkai-txt{padding:clamp(80px,10vw,140px) var(--gutter) clamp(80px,10vw,140px) clamp(32px,5vw,80px);display:flex;flex-direction:column;justify-content:center}
+.enkai h2{font-size:clamp(28px,3.2vw,44px);font-weight:900}
+.enkai .lead{margin-top:20px;color:#DDD3C3;max-width:24em}
+dl.spec{margin:36px 0 0;display:grid;grid-template-columns:7em minmax(0,1fr);border-top:1px solid var(--line);font-size:14px}
+dl.spec dt,dl.spec dd{margin:0;padding:15px 0;border-bottom:1px solid var(--line)}
+dl.spec dt{color:var(--mute)}
+.enkai .btn{margin-top:36px;align-self:flex-start}
+
+/* 店内 */
+.tennai{padding:clamp(100px,12vw,170px) 0}
+.tennai-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);grid-template-rows:auto auto;gap:16px}
+.tennai figure{margin:0;overflow:hidden;position:relative}
+.tennai figure img{width:100%;height:100%;object-fit:cover}
+.tennai .t1{grid-row:1/3;border-radius:4px 4px 4px 4px;min-height:520px}
+.tennai .t2,.tennai .t3{aspect-ratio:3/2;border-radius:4px}
+.tennai figcaption{position:absolute;left:14px;bottom:12px;font-size:12px;color:#fff;background:rgba(20,15,12,.7);padding:2px 10px;border-radius:2px}
+.tennai-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px 40px;margin-bottom:36px}
+.tennai h2{font-size:clamp(28px,3.2vw,42px);font-weight:900}
+.tennai-head p{color:var(--mute);max-width:32em}
+
+/* 予約・アクセス */
+.rsv{background:var(--sumi-2);padding:clamp(100px,12vw,160px) 0 clamp(80px,10vw,130px)}
+.rsv-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:56px clamp(40px,6vw,100px)}
+.rsv h2{font-size:clamp(28px,3.2vw,42px);font-weight:900}
+.rsv .lead{margin-top:18px;color:#DDD3C3;max-width:26em}
+.rsv-tel{margin-top:36px;display:block;text-decoration:none}
+.rsv-tel small{display:block;font-size:13px;color:var(--mute)}
+.rsv-tel .n{font-size:clamp(40px,5vw,60px);line-height:1.15;color:var(--text);transition:color .2s}
+.rsv-tel:hover .n{color:var(--kin)}
+.rsv-tel span.h{font-size:13px;color:var(--mute)}
+.rsv .btn{margin-top:24px}
+.rsv-small{margin-top:16px;font-size:13px;color:var(--mute)}
+.hours caption{padding-bottom:10px}
+.hours th,.hours td{padding:13px 12px;font-size:15px;vertical-align:middle}
+.hours th{font-weight:500;width:9em}
+.hours td .n{font-size:18px}
+.hours tr.today{background:rgba(217,164,65,.12)}
+.hours tr.today th{color:var(--kin);font-weight:700}
+.hours tr.today th::after{content:"今日";margin-left:8px;font-size:11px;font-weight:700;color:#1E1915;background:var(--kin);padding:0 6px;border-radius:2px;vertical-align:2px}
+.addr{margin-top:36px;font-size:15px}
+.addr small{display:block;color:var(--mute);font-size:13px}
+.maplink{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-weight:700;text-decoration:none;border:1px solid var(--line);padding:11px 18px;border-radius:4px;transition:border-color .2s}
+.maplink:hover{border-color:var(--kin)}
+.maplink svg{width:16px;height:16px}
+
+.ft{padding:40px 0 56px;border-top:1px solid var(--line);font-size:12px;color:var(--mute)}
+.ft .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 24px}
+.ft b{font-family:var(--display);font-weight:400;font-size:20px;color:var(--text);margin-right:10px}
+
+/* 下部：デモ帯（＋スマホの予約バー） */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:60}
+.sp-bar{display:none}
+.demo{margin:0;background:#0F0C0A;color:var(--mute);font-size:11px;text-align:center;padding:4px 12px calc(4px + var(--safe-b));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+@media (max-width:1080px){
+  .nav>a:not(.btn):not(.hd-tel){display:none}
+}
+@media (max-width:899px){
+  :root{--hd:60px}
+  .nav .hd-tel{display:none}
+  .fv{display:flex;flex-direction:column;height:auto;min-height:100svh;max-height:none}
+  .fv-photo{flex:none;height:44svh;min-height:300px}
+  .fv-photo img{object-position:46% 38%}
+  .fv-in{flex:1;justify-content:flex-start;padding:28px var(--gutter) calc(100px + var(--safe-b))}
+  .kd-head,.kd-main,.kd-sub,.course-grid,.rsv-grid{grid-template-columns:1fr}
+  .kd-sumi{margin-top:0}
+  .kd-sumi figure{aspect-ratio:4/3}
+  .kd-sumi figure img{object-position:50% 60%}
+  /* 部位：普通の横スワイプに切り替え */
+  .parts-pin{min-height:0;padding:clamp(88px,14vw,120px) 0 64px}
+  .track{width:auto;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 var(--gutter);padding-bottom:12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .track::-webkit-scrollbar{display:none}
+  .part{scroll-snap-align:start;width:min(78vw,340px)}
+  .part figure{height:auto;aspect-ratio:4/3;width:100%}
+  .part:nth-child(even){padding-top:0}
+  .part-end{scroll-snap-align:start;width:min(70vw,300px);padding-right:var(--gutter)}
+  .parts-hint{display:block;margin-top:10px;padding:0 var(--gutter);font-size:12px;color:var(--mute)}
+  .enkai{grid-template-columns:1fr;min-height:0}
+  .enkai figure{aspect-ratio:4/3}
+  .enkai-txt{padding:56px var(--gutter) 96px}
+  .tennai-grid{grid-template-columns:1fr 1fr}
+  .tennai .t1{grid-column:1/-1;grid-row:auto;min-height:0;aspect-ratio:4/3}
+  .ft{padding-bottom:150px}
+}
+@media (max-width:640px){
+  body{font-size:15px}
+  .nav .btn{display:none}
+  .logo small{display:none}
+  .fv h1{font-size:clamp(38px,13vw,58px)}
+  .fv-act{display:none}
+  .fv-today{margin-top:22px}
+  .fv .lead{margin-top:20px}
+  .sp-bar{display:grid;grid-template-columns:1fr 1.3fr;gap:8px;padding:8px 12px;background:rgba(20,15,12,.94);backdrop-filter:blur(8px);border-top:1px solid var(--line)}
+  .sp-bar a{display:flex;align-items:center;justify-content:center;gap:6px;min-height:48px;border-radius:4px;text-decoration:none;font-weight:700;font-size:15px}
+  .sp-bar .t{border:1px solid rgba(239,230,216,.35)}
+  .sp-bar .w{background:var(--kin);color:#1E1915}
+  .sp-bar svg{width:16px;height:16px}
+  /* 表は行ごとに組み替える */
+  .course-t thead{display:none}
+  .course-t tr{display:grid;grid-template-columns:1fr auto;gap:6px 16px;padding:20px 0;border-bottom:1px solid var(--line)}
+  .course-t td,.course-t th{padding:0;border:0}
+  .course-t .c-name{width:auto;padding:0}
+  .course-t .c-body{grid-column:1/-1;grid-row:2;padding:0}
+  .c-price .n{font-size:26px}
+  tr.pick .c-name b::after{display:table;margin:6px 0 0}
+  .hours th,.hours td{padding:12px 8px;font-size:14px}
+  .hours th{width:7.5em}
+  dl.spec{grid-template-columns:5.5em minmax(0,1fr)}
+  .tennai-grid{gap:8px}
+}
+@media (prefers-reduced-motion:reduce){
+  body::after{animation:none}
+  .split .ch>span{animation:none;transform:none;filter:none}
+  .is-open .dot{animation:none}
+  .btn{transition:none}
+}
+</style>
+</head>
+<body>
+
+<header class="hd" id="hd">
+  <div class="hd-in">
+    <a class="logo" href="#top"><b>ひの字</b><small>炭火焼肉<br>葛飾・立石</small></a>
+    <nav class="nav" aria-label="メイン">
+      <a href="#kodawari">肉とタレと火</a>
+      <a href="#parts">今日の部位</a>
+      <a href="#course">コース</a>
+      <a href="#enkai">宴会</a>
+      <a href="#reserve">アクセス</a>
+      <a class="hd-tel" href="tel:0300000000" aria-label="電話 03-0000-0000（架空）">03-0000-0000</a>
+      <a class="btn" href="#reserve">Web予約</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <!-- FV -->
+  <section class="fv" aria-label="炭火焼肉 ひの字">
+    <div class="fv-photo"><img src="img/hero.jpg" alt="炭の上の網で、煙を上げて焼ける牛肉" fetchpriority="high"></div>
+    <div class="fv-in">
+      <div>
+        <h1 id="fvTitle"><span class="ln split">一頭買いを、</span><span class="ln split">炭で焼く。</span></h1>
+        <p class="lead"><span class="nw">京成立石駅から歩いて3分。</span><span class="nw">黒毛和牛を一頭まるごと仕入れて、</span><span class="nw">備長炭のロースターで焼きます。</span><span class="nw">おひとり4,000〜6,000円で、</span><span class="nw">お腹いっぱい。</span></p>
+        <div class="fv-act">
+          <a class="btn" href="#reserve">Web予約で空席を見る</a>
+          <a class="tel-link" href="tel:0300000000">電話で予約<span class="n">03-0000-0000</span></a>
+        </div>
+        <p class="fv-today" id="fvToday"><b><span class="dot"></span><span id="todayLabel">本日</span></b><span id="todayHours">17:00–23:00</span><span>水曜定休</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- こだわり -->
+  <section class="kd" id="kodawari">
+    <div class="wrap">
+      <div class="kd-head">
+        <h2>肉と、タレと、火。<br>手間をかけるのはここだけです。</h2>
+        <p>内装も接客も、下町の焼肉屋そのまま。そのぶん仕入れと仕込みに時間を使っています。</p>
+      </div>
+
+      <div class="kd-main">
+        <figure><img src="img/kodawari-ittou.jpg" alt="霜降りの入った牛肉のかたまり" loading="lazy"></figure>
+        <div>
+          <h3><span class="nw">毎週火曜、</span><span class="nw">一頭まるごと届きます</span></h3>
+          <p class="body">千葉の契約牧場から、黒毛和牛を一頭買い。枝肉のまま店で切り分けるので、ミスジやザブトンのような一頭から数キロしか取れない部位も、その週はお出しできます。</p>
+          <p class="note">希少部位は売り切れ次第おしまい。週末の夜はお早めに。</p>
+        </div>
+      </div>
+
+      <div class="kd-sub">
+        <div class="kd-tare">
+          <figure><img src="img/kodawari-tare.jpg" alt="焼いた肉を箸でタレにくぐらせているところ" loading="lazy"></figure>
+          <h3><span class="nw">タレは甘口、</span><span class="nw">三日寝かせて</span></h3>
+          <p class="body">醤油にりんごと玉ねぎをすりおろして、三日寝かせます。焼けた肉をくぐらせたら、ご飯にワンバウンド。タンと赤身は塩とレモンでどうぞ。</p>
+        </div>
+        <div class="kd-sumi">
+          <figure><img src="img/kodawari-sumi.jpg" alt="赤く熾った炭を火ばさみで動かしているところ" loading="lazy"></figure>
+          <h3><span class="nw">火は備長炭、</span><span class="nw">煙は下へ</span></h3>
+          <p class="body">ロースターの下に炭を入れ、煙はダクトが下に吸います。服に匂いが残りにくいので、仕事帰りでも気になりません。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 部位メニュー -->
+  <section class="parts" id="parts" aria-label="今日の部位">
+    <div class="parts-pin" id="partsPin">
+      <div class="wrap parts-head">
+        <div>
+          <h2>今日の部位</h2>
+        </div>
+        <p>一頭買いなので、並ぶ部位は日によって変わります。価格はすべて1人前・税込。</p>
+        <p class="parts-count" aria-hidden="true"><b id="pNow">01</b> / <span id="pAll">08</span></p>
+      </div>
+      <div class="track" id="track" tabindex="0" aria-label="部位の一覧（横にスクロールできます）">
+        <article class="part" style="--ar:4/3">
+          <figure><img src="img/m-tan.jpg" alt="網の上で焼ける厚切りの牛タン" loading="lazy"></figure>
+          <div class="part-meta"><h3>厚切り上タン</h3><p class="price">1,980<small>円</small></p>
+            <p class="how"><b>塩</b>レモンかネギ塩で</p><p class="say">1cmの厚切りに隠し包丁。表面を焼き固めて、中はやわらかいまま。</p></div>
+        </article>
+        <article class="part" style="--ar:3/2">
+          <figure><img src="img/m-karubi.jpg" alt="皿に盛った霜降りのカルビ" loading="lazy"></figure>
+          <div class="part-meta"><h3>上カルビ</h3><p class="price">1,480<small>円</small></p>
+            <p class="how"><b>タレ</b>ご飯と一緒に</p><p class="say">迷ったらこれ。甘口のタレがいちばん合う部位です。</p></div>
+        </article>
+        <article class="part" style="--ar:4/3">
+          <figure><img src="img/m-shimofuri.jpg" alt="細かくサシの入った霜降り肉" loading="lazy"></figure>
+          <div class="part-meta"><h3>特選霜降り</h3><p class="price">2,280<small>円</small></p>
+            <p class="how"><b>塩・タレ</b>網の上で片面10秒ずつ</p><p class="say">その週いちばんサシの入った部位を、店主が選んで切ります。</p></div>
+        </article>
+        <article class="part" style="--ar:3/4">
+          <figure><img src="img/m-rosu.jpg" alt="薄切りにした霜降りのロース" loading="lazy"></figure>
+          <div class="part-meta"><h3>上ロース</h3><p class="price">1,380<small>円</small></p>
+            <p class="how"><b>タレ</b>卵黄をつけても</p><p class="say">薄く大判に切ったロース。さっと炙るだけで十分です。</p></div>
+        </article>
+        <article class="part" style="--ar:3/2">
+          <figure><img src="img/m-kaku.jpg" alt="網の上で焼ける角切りの肉" loading="lazy"></figure>
+          <div class="part-meta"><h3>角切りカルビ</h3><p class="price">1,180<small>円</small></p>
+            <p class="how"><b>タレ</b>四面を転がして</p><p class="say">噛むほど脂の甘さが出ます。ビールが進む一皿。</p></div>
+        </article>
+        <article class="part" style="--ar:3/2">
+          <figure><img src="img/m-akami.jpg" alt="表面を焼いて切り分けた赤身肉" loading="lazy"></figure>
+          <div class="part-meta"><h3>赤身の炙り</h3><p class="price">1,680<small>円</small></p>
+            <p class="how"><b>塩</b>わさび醤油も合います</p><p class="say">脂が苦手な方に。厚めに切って、表面だけしっかり焼きます。</p></div>
+        </article>
+        <article class="part" style="--ar:4/5">
+          <figure><img src="img/m-buta.jpg" alt="黒こしょうをふった豚バラの薄切り" loading="lazy"></figure>
+          <div class="part-meta"><h3>豚バラ</h3><p class="price">680<small>円</small></p>
+            <p class="how"><b>塩</b>カリッとするまで</p><p class="say">粗挽きの黒こしょうで。お子さまにも人気です。</p></div>
+        </article>
+        <article class="part" style="--ar:3/2">
+          <figure><img src="img/m-mori.jpg" alt="霜降り肉を盛った皿を手に持っているところ" loading="lazy"></figure>
+          <div class="part-meta"><h3>本日の盛り合わせ</h3><p class="price">5,800<small>円</small></p>
+            <p class="how"><b>3〜4人前</b>部位は日替わり</p><p class="say">その日の部位を5種類。初めての方は、まずこれを。</p></div>
+        </article>
+        <div class="part-end">
+          <p>ほかにホルモン、キムチ、冷麺、石焼ビビンバなど。全メニューはお店でお渡ししています。</p>
+          <a href="#course">コースで頼むなら</a>
+        </div>
+      </div>
+      <p class="parts-hint">横にスワイプすると次の部位が見られます。</p>
+    </div>
+  </section>
+
+  <!-- コース・飲み放題 -->
+  <section class="course" id="course">
+    <div class="wrap">
+      <h2>コースと飲み放題</h2>
+      <div class="course-grid">
+        <table class="course-t">
+          <caption>コース（2名様から・前日までにご予約ください）</caption>
+          <thead><tr><th scope="col">コース</th><th scope="col">内容</th><th scope="col" class="c-price">おひとり</th></tr></thead>
+          <tbody>
+            <tr>
+              <th scope="row" class="c-name"><b>下町コース</b><span>全9品</span></th>
+              <td class="c-body">ナムル、キムチ、上タン、上カルビ、上ロース、豚バラ、ホルモン、冷麺、アイス</td>
+              <td class="c-price"><span class="n">4,000</span><small>円</small></td>
+            </tr>
+            <tr class="pick">
+              <th scope="row" class="c-name"><b>ひの字コース</b><span>全11品</span></th>
+              <td class="c-body">下町コースの上タンを厚切りに、特選霜降りと赤身の炙りを追加。締めは石焼ビビンバか冷麺</td>
+              <td class="c-price"><span class="n">5,500</span><small>円</small></td>
+            </tr>
+            <tr>
+              <th scope="row" class="c-name"><b>宴会コース</b><span>全10品・飲み放題2時間付き</span></th>
+              <td class="c-body">大皿で盛り合わせを出すので、取り分けの手間がありません。8名様から</td>
+              <td class="c-price"><span class="n">6,000</span><small>円</small></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table class="drink">
+          <caption>飲み放題（単品にも付けられます）</caption>
+          <tbody>
+            <tr><th scope="row">2時間<span class="sub">生ビール・ハイボール・サワー・焼酎・ソフトドリンク</span></th><td><span class="n">1,800</span>円</td></tr>
+            <tr><th scope="row">プラス日本酒・ワイン<span class="sub">上の飲み放題に追加</span></th><td><span class="n">+500</span>円</td></tr>
+            <tr><th scope="row">30分延長</th><td><span class="n">500</span>円</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="course-note">価格はすべて税込。ラストオーダーは終了の30分前です。アレルギーはご予約時にお知らせください。</p>
+    </div>
+  </section>
+
+  <!-- 宴会・個室 -->
+  <section class="enkai" id="enkai">
+    <figure><img src="img/enkai.jpg" alt="ジョッキの生ビールで乾杯しているところ" loading="lazy"></figure>
+    <div class="enkai-txt">
+      <h2>2階の座敷は、<br>24名まで入れます。</h2>
+      <p class="lead">歓送迎会、町内会の集まり、法事のあとの会食まで。襖で仕切れば8名ずつの個室が3つになります。</p>
+      <dl class="spec">
+        <dt>座敷</dt><dd>2階・掘りごたつ・最大24名</dd>
+        <dt>個室</dt><dd>8名×3部屋（襖で仕切ります）</dd>
+        <dt>貸切</dt><dd>30〜40名・日曜と祝日のみ。ご相談ください</dd>
+        <dt>幹事さんへ</dt><dd>人数の変更は前日20時まで。領収書は分けて出せます</dd>
+      </dl>
+      <a class="btn" href="#reserve">宴会の空きを見る</a>
+    </div>
+  </section>
+
+  <!-- 店内 -->
+  <section class="tennai" id="tennai">
+    <div class="wrap">
+      <div class="tennai-head">
+        <h2>店内</h2>
+        <p>1階はカウンター8席とテーブル6卓。焼き場の前のカウンターは、おひとりの方にも。</p>
+      </div>
+      <div class="tennai-grid">
+        <figure class="t1"><img src="img/tennai-1.jpg" alt="煙の立つ焼き場と、その前のカウンター" loading="lazy"><figcaption>焼き場の前のカウンター</figcaption></figure>
+        <figure class="t2"><img src="img/tennai-2.jpg" alt="品書きの札が並ぶ店内で食事をする客" loading="lazy"><figcaption>壁の品書きは手書き</figcaption></figure>
+        <figure class="t3"><img src="img/tennai-3.jpg" alt="カウンター越しに調理する店主と客" loading="lazy"><figcaption>夜8時ごろの1階</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- 予約・アクセス -->
+  <section class="rsv" id="reserve">
+    <div class="wrap rsv-grid">
+      <div>
+        <h2>ご予約・アクセス</h2>
+        <p class="lead">当日の空きは、お電話がいちばん早く分かります。Web予約は24時間受け付けています。</p>
+        <a class="rsv-tel" href="tel:0300000000"><small>お電話（16:00から受付）</small><span class="n">03-0000-0000</span> <span class="h">※架空の番号です</span></a>
+        <a class="btn" href="#reserve">Web予約で空席を見る</a>
+        <p class="rsv-small">Web予約は見本のため、実際の予約画面には進みません。</p>
+
+        <p class="addr">東京都葛飾区立石〇丁目〇-〇（架空の住所）<small>京成押上線・京成立石駅の南口から徒歩3分。駅前の商店街を抜けた角です。</small></p>
+        <a class="maplink" href="https://www.google.com/maps/search/?api=1&amp;query=%E4%BA%AC%E6%88%90%E7%AB%8B%E7%9F%B3%E9%A7%85" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 15s5-4.5 5-8.5a5 5 0 1 0-10 0C3 10.5 8 15 8 15Z"/><circle cx="8" cy="6.5" r="1.8"/></svg>
+          Googleマップで開く（京成立石駅）</a>
+      </div>
+      <div>
+        <table class="hours" id="hours">
+          <caption>営業時間</caption>
+          <tbody>
+            <tr data-d="1"><th scope="row">月曜</th><td><span class="n">17:00–23:00</span></td></tr>
+            <tr data-d="2"><th scope="row">火曜</th><td><span class="n">17:00–23:00</span></td></tr>
+            <tr data-d="3"><th scope="row">水曜</th><td>定休日</td></tr>
+            <tr data-d="4"><th scope="row">木曜</th><td><span class="n">17:00–23:00</span></td></tr>
+            <tr data-d="5"><th scope="row">金曜</th><td><span class="n">17:00–24:00</span></td></tr>
+            <tr data-d="6"><th scope="row">土曜</th><td><span class="n">16:00–24:00</span></td></tr>
+            <tr data-d="0"><th scope="row">日曜・祝日</th><td><span class="n">16:00–22:00</span></td></tr>
+          </tbody>
+        </table>
+        <p class="course-note">ラストオーダーは閉店の30分前。駐車場はありません。近くのコインパーキングをご利用ください。</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="ft">
+  <div class="wrap"><span><b>ひの字</b>炭火焼肉・葛飾立石（架空の店・デザイン見本）</span><span>写真：Unsplash</span></div>
+</footer>
+
+<div class="dock">
+  <nav class="sp-bar" aria-label="ご予約">
+    <a class="t" href="tel:0300000000"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 1.8h2.6l1.2 3-1.6 1.1a8 8 0 0 0 4.9 4.9l1.1-1.6 3 1.2v2.6A1.6 1.6 0 0 1 12.6 14 11 11 0 0 1 2 3.4 1.6 1.6 0 0 1 3 1.8Z"/></svg>電話する</a>
+    <a class="w" href="#reserve">Web予約で空席を見る</a>
+  </nav>
+  <p class="demo">架空の店のデザイン見本です（制作：プラチナ企画）</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ヘッダーの背景
+  const hd = document.getElementById('hd');
+  const onScroll = () => hd.classList.toggle('is-solid', scrollY > 40);
+  onScroll(); addEventListener('scroll', onScroll, {passive:true});
+
+  // ① FVの見出しを1文字ずつ（ここ1か所だけ）
+  const title = document.getElementById('fvTitle');
+  title.setAttribute('aria-label', title.textContent);
+  if (!reduce) {
+    let i = 0;
+    title.querySelectorAll('.split').forEach(el => {
+      el.setAttribute('aria-hidden', 'true');
+      el.innerHTML = [...el.textContent].map(c => `<span class="ch"><span style="--i:${i++}">${c}</span></span>`).join('');
+    });
+  }
+
+  // 営業時間：今日の行に印を付け、FVに今日の営業時間を出す
+  const hours = {0:[16,22],1:[17,23],2:[17,23],3:null,4:[17,23],5:[17,24],6:[16,24]};
+  const now = new Date(), d = now.getDay(), h = now.getHours() + now.getMinutes()/60;
+  const row = document.querySelector(`#hours tr[data-d="${d}"]`);
+  if (row) row.classList.add('today');
+  const t = hours[d], label = document.getElementById('todayLabel'), th = document.getElementById('todayHours'), box = document.getElementById('fvToday');
+  if (!t) { label.textContent = '本日は定休日'; th.textContent = '水曜定休・木曜は17:00から'; }
+  else {
+    const fmt = n => String(n).padStart(2,'0') + ':00';
+    th.innerHTML = `<span class="n">${fmt(t[0])}–${fmt(t[1])}</span>`;
+    if (h >= t[0] && h < t[1] - .5) { label.textContent = 'いま営業中'; box.classList.add('is-open'); }
+    else if (h < t[0]) label.textContent = '本日の営業';
+    else label.textContent = '本日の受付は終了';
+  }
+
+  // ② 部位の番号（スマホの横スワイプ用）
+  const track = document.getElementById('track');
+  const parts = [...track.querySelectorAll('.part')];
+  const pNow = document.getElementById('pNow');
+  document.getElementById('pAll').textContent = String(parts.length).padStart(2,'0');
+  const setNum = i => { pNow.textContent = String(Math.min(parts.length, i + 1)).padStart(2,'0'); };
+  track.addEventListener('scroll', () => {
+    const x = track.scrollLeft, w = parts[0].offsetWidth + 28;
+    setNum(Math.round(x / w));
+  }, {passive:true});
+
+  if (!window.gsap || !window.ScrollTrigger) return;
+  gsap.registerPlugin(ScrollTrigger);
+
+  if (!reduce && window.Lenis) {
+    const lenis = new Lenis({lerp: 0.1});
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add(time => lenis.raf(time * 1000));
+    gsap.ticker.lagSmoothing(0);
+    document.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
+      const el = document.querySelector(a.getAttribute('href'));
+      if (el) { e.preventDefault(); lenis.scrollTo(el, {offset: a.getAttribute('href') === '#top' ? 0 : -8}); }
+    }));
+  }
+
+  // ② PC：部位メニューをピン留めして横に流す
+  const mm = gsap.matchMedia();
+  mm.add('(min-width: 900px) and (prefers-reduced-motion: no-preference)', () => {
+    const travel = () => Math.max(0, track.scrollWidth - innerWidth);
+    gsap.to(track, {
+      x: () => -travel(), ease: 'none',
+      scrollTrigger: {
+        trigger: '#partsPin', pin: true, scrub: .6, anticipatePin: 1,
+        start: 'top top', end: () => '+=' + travel() * 1.1, invalidateOnRefresh: true,
+        onUpdate: self => setNum(Math.floor(self.progress * (parts.length - .01)))
+      }
+    });
+  });
+  addEventListener('load', () => ScrollTrigger.refresh());
+})();
+</script>
+</body>
+</html>

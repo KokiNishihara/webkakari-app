@@ -11,12 +11,19 @@ const SRC = path.join(os.homedir(), '仕事/05_HP制作保守事業');
 const OUT = path.resolve('service-sites');
 const SITES = { clinic: 'service-site', food: 'service-site-food' };
 const ENTRY = ['index.html', 'tokushoho.html', 'privacy.html'];
+// デザインの見本（架空の店・医院）。各サービスサイトの中の mihon/<名前>/ に入れる（例：/service/food/mihon/toshin/）
+const MIHON = {
+  'food/mihon/toshin': '見本_高級和食_灯心', 'food/mihon/shirahi': '見本_寿司', 'food/mihon/suginoya': '見本_蕎麦',
+  'food/mihon/hinoji': '見本_焼肉', 'food/mihon/chispa': '見本_タコス',
+  'clinic/mihon/nagi': '見本_美容外科', 'clinic/mihon/hanamizuki': '見本_歯科', 'clinic/mihon/sorano': '見本_整骨院',
+};
+const JOBS = [...Object.entries(SITES).map(([k, d]) => [k, d, ENTRY]), ...Object.entries(MIHON).map(([k, d]) => [k, d, ['index.html']])];
 
-for (const [key, dir] of Object.entries(SITES)) {
+for (const [key, dir, entry] of JOBS) {
   const root = path.join(SRC, dir);
   const out = path.join(OUT, key);
   rmSync(out, { recursive: true, force: true });
-  const queue = ENTRY.filter((f) => existsSync(path.join(root, f)));
+  const queue = entry.filter((f) => existsSync(path.join(root, f)));
   const seen = new Set();
   let bytes = 0;
   while (queue.length) {

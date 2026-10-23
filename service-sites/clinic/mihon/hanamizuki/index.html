@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>みなみ台はなみずき歯科（デザイン見本）</title>
+<meta name="description" content="架空の歯科医院のデザイン見本です。みなみ台駅から徒歩3分、土曜も診療。キッズスペースとWeb予約があります。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Maru+Gothic:wght@500;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF;
+  --surface:#F2F5F9;    /* 交互の面：青みの薄いグレー */
+  --ink:#1D2935;
+  --sub:#4A5867;        /* 白地・面の上で6:1以上 */
+  --line:#D9E1EA;
+  --blue:#2F6FB0;       /* Web予約・今日の列・リンクだけ */
+  --blue-deep:#245889;
+  --tint:#E6EFF8;       /* 今日の列 */
+  --kids:#F2C14E;       /* キッズ関連の印だけ */
+  --off:#8793A0;
+
+  --head:"Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif;
+  --body:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  --num:"Figtree","BIZ UDPGothic",sans-serif;
+  --gutter:clamp(16px,4.5vw,56px);
+  --max:1160px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{font-size:100%;-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:calc(84px + var(--safe-top))}
+html.is-large{font-size:118.75%}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:1rem;line-height:1.85;letter-spacing:.03em;overflow-wrap:anywhere;line-break:strict;text-autospace:normal;text-spacing-trim:trim-start;font-kerning:none;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-family:var(--head);font-weight:700;line-height:1.45;letter-spacing:.03em;font-feature-settings:"palt";font-kerning:normal}
+@supports (word-break:auto-phrase){h1,h2,h3{word-break:auto-phrase;text-wrap:balance}}
+p{margin:0}
+a{color:var(--blue);text-underline-offset:4px}
+img{display:block;max-width:100%;height:auto}
+:focus-visible{outline:3px solid #C77700;outline-offset:3px;border-radius:4px}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
+.nw{display:inline-block}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+
+.util{background:var(--surface);padding-top:var(--safe-top)}
+.util .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:44px}
+.demo{color:var(--sub);font-size:12px;line-height:1.5}
+
+/* ヘッダー */
+.hd{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.96);padding-top:var(--safe-top);border-bottom:1px solid transparent;transition:border-color .25s}
+.hd.is-scrolled{border-color:var(--line)}
+.hd .wrap{display:flex;align-items:center;gap:22px;min-height:76px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand svg{flex:none}
+.brand span{font-family:var(--head);line-height:1.25}
+.brand small{display:block;font-size:12px;color:var(--sub);font-weight:500;letter-spacing:.08em}
+.brand b{font-size:21px;letter-spacing:.06em}
+.nav{display:flex;gap:24px;font-size:.92rem;white-space:nowrap}
+.nav a{color:var(--ink);text-decoration:none;padding:6px 0}
+.nav a:hover{color:var(--blue)}
+.hd-tel{font-family:var(--num);font-weight:600;font-size:1.05rem;color:var(--ink);text-decoration:none;white-space:nowrap}
+.hd-tel:hover{color:var(--blue)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 24px;border-radius:10px;background:var(--blue);color:#fff;font-weight:700;text-decoration:none;white-space:nowrap;transition:background .2s}
+.btn:hover{background:var(--blue-deep)}
+.btn-line{background:#fff;color:var(--ink);border:1.5px solid var(--ink)}
+.btn-line:hover{background:var(--surface)}
+.fs{display:flex;align-items:center;gap:4px;font-size:13px;flex:none}
+.fs-label{color:var(--sub);margin-right:4px}
+.fs button{font:inherit;font-size:13px;white-space:nowrap;min-height:32px;padding:0 12px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);cursor:pointer}
+.fs button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+
+/* FV：見出しの行と、横長の写真 */
+.fv{padding:clamp(28px,4vw,56px) 0 0}
+.fv-top{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px 56px;align-items:end}
+.fv h1{font-size:clamp(2rem,3.7vw,2.95rem);line-height:1.38}
+.fv-lead{color:var(--sub);font-size:1.02rem;max-width:30em}
+@media (min-width:641px){@supports (word-break:auto-phrase){.fv-lead{word-break:auto-phrase}}}
+.fv-act{margin-top:22px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
+.fv-tel{display:flex;flex-direction:column;line-height:1.3;color:var(--ink);text-decoration:none}
+.fv-tel small{font-size:.8rem;color:var(--sub)}
+.fv-tel b{font-family:var(--num);font-weight:600;font-size:1.35rem;letter-spacing:.02em}
+.fv-photo{position:relative;margin:clamp(24px,3vw,36px) 0 0}
+.fv-photo img{width:100%;height:clamp(300px,calc(100vh - 410px),560px);height:clamp(300px,calc(100svh - 410px),560px);object-fit:cover;object-position:50% 54%;border-radius:6px 6px 6px 56px}
+.now{position:absolute;right:24px;bottom:24px;background:#fff;border-radius:12px;padding:18px 24px 18px 22px;min-width:300px;border:1px solid var(--line)}
+.now p{font-size:.85rem;color:var(--sub)}
+.now strong{display:flex;align-items:center;gap:10px;margin-top:2px;font-family:var(--head);font-size:1.15rem}
+.now .times{margin-top:4px;color:var(--ink);font-family:var(--num);font-size:1rem}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--blue);flex:none}
+.dot.off{background:var(--off)}
+.is-open .dot{animation:ping 2s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(47,111,176,.5)}70%,100%{box-shadow:0 0 0 8px rgba(47,111,176,0)}}
+
+/* 診療時間 */
+.hours{padding:clamp(64px,8vw,104px) 0 clamp(64px,7vw,88px)}
+.hours-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2.6fr);gap:20px 56px;align-items:start}
+.hours h2{font-size:clamp(1.55rem,2.6vw,2rem)}
+.hours-side p{margin-top:10px;color:var(--sub);font-size:.95rem}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;text-align:center}
+.tbl col.t{width:23%}
+.tbl th,.tbl td{padding:16px 4px;border-bottom:1px solid var(--line)}
+.tbl thead th{font-family:var(--head);font-weight:500;color:var(--sub);border-bottom:1.5px solid var(--ink)}
+.tbl tbody th{text-align:left;font-weight:400;color:var(--sub);font-size:.9rem;line-height:1.45}
+.tbl tbody th b{display:block;color:var(--ink);font-family:var(--num);font-weight:500;font-size:1.2rem}
+.tbl td.o::before{content:"";display:inline-block;width:13px;height:13px;border-radius:50%;border:2.5px solid var(--blue);vertical-align:middle}
+.tbl td.x{color:var(--off)}
+.tbl td.s{font-family:var(--num);font-size:.92rem;line-height:1.35;color:var(--ink)}
+.tbl .today-col{background:var(--tint)}
+.tbl thead .today-col{color:var(--blue);font-weight:700;border-radius:10px 10px 0 0}
+.tbl thead .today-col::after{content:"今日";display:block;font-size:.7rem;line-height:1.2}
+.hours-notes{margin-top:14px;color:var(--sub);font-size:.9rem}
+
+/* セクション共通 */
+.sec{padding:clamp(80px,10vw,128px) 0}
+.sec-surface{background:var(--surface)}
+.sec h2{font-size:clamp(1.7rem,3vw,2.4rem)}
+.intro{margin-top:16px;color:var(--sub);max-width:34em}
+
+/* はじめての方へ：左に見出しと線画、右に手順 */
+.first{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr);gap:48px 80px}
+.first-side{position:sticky;top:calc(110px + var(--safe-top));align-self:start}
+.draw{display:block;width:clamp(170px,20vw,240px);height:auto;margin-top:36px}
+.draw path{fill:none;stroke:var(--blue);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.draw .brush{stroke:var(--ink);stroke-width:2}
+.js .draw path{stroke-dasharray:var(--len);stroke-dashoffset:var(--len)}
+.js .draw.is-on path{animation:draw 1.8s cubic-bezier(.45,.05,.3,1) forwards}
+.js .draw.is-on .smile{animation-delay:1.3s;animation-duration:.7s}
+.js .draw.is-on .brush{animation-delay:1.7s;animation-duration:1.1s}
+@keyframes draw{to{stroke-dashoffset:0}}
+.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+.steps li{position:relative;display:grid;grid-template-columns:56px minmax(0,1fr);gap:0 20px;padding-bottom:36px}
+.steps li::before{counter-increment:s;content:counter(s);font-family:var(--num);font-weight:500;font-size:1.5rem;line-height:44px;width:44px;height:44px;text-align:center;border:1.5px solid var(--ink);border-radius:50%;background:var(--bg)}
+.steps li:not(:last-child)::after{content:"";position:absolute;left:22px;top:52px;bottom:6px;width:1.5px;background:var(--line)}
+.steps h3{font-size:1.25rem;padding-top:6px}
+.steps p{margin-top:6px}
+.steps .note{color:var(--sub);font-size:.92rem}
+.first-bring{margin-top:4px;padding:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);display:grid;grid-template-columns:9em minmax(0,1fr);gap:4px 20px;font-size:.95rem}
+.first-bring b{font-family:var(--head)}
+
+/* 診療内容：罫線の一覧 */
+.menu-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px 48px;margin-bottom:36px}
+.menu-head .intro{margin-top:0;max-width:30em}
+.menu{list-style:none;margin:0;padding:0;border-top:1.5px solid var(--ink)}
+.menu li{display:grid;grid-template-columns:minmax(0,14em) minmax(0,1fr) minmax(0,10em);gap:6px 40px;padding:28px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.menu h3{font-size:1.45rem}
+.menu .tag{font-size:.88rem;color:var(--sub);text-align:right}
+.menu .words{display:block;margin-top:6px;color:var(--sub);font-size:.9rem}
+.menu li.self h3{color:var(--blue)}
+.menu a{font-weight:700}
+.kid-mark{display:inline-flex;align-items:center;gap:8px;margin-top:8px;font-size:.88rem;font-weight:700;color:var(--ink)}
+.kid-mark::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--kids);flex:none}
+
+/* 自費診療の料金表 */
+.price-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:16px 64px;align-items:end;margin-bottom:36px}
+.price-head .intro{margin-top:0}
+.ptbl{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden}
+.ptbl th,.ptbl td{padding:22px 20px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+.ptbl thead th{font-size:.85rem;font-weight:700;color:var(--sub);background:#fff;border-bottom:1.5px solid var(--ink);padding-top:18px;padding-bottom:14px}
+.ptbl tbody tr:last-child>*{border-bottom:0}
+.ptbl tbody th{font-family:var(--head);font-size:1.15rem;width:20%}
+.ptbl tbody th small{display:block;font-family:var(--body);font-weight:400;font-size:.85rem;color:var(--sub);margin-top:2px}
+.ptbl .yen{width:19%}
+.ptbl .yen b{font-family:var(--num);font-weight:600;font-size:1.3rem;letter-spacing:.01em;white-space:nowrap}
+.ptbl .yen small{display:block;font-size:.85rem;color:var(--sub)}
+.ptbl .term{width:16%;font-size:.95rem}
+.ptbl .risk{font-size:.92rem;color:var(--ink)}
+.price-notes{margin:20px 0 0;padding:0 0 0 1.2em;color:var(--sub);font-size:.9rem}
+.price-notes li+li{margin-top:4px}
+
+/* 医師・スタッフ */
+.doc{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr);gap:40px 72px;align-items:start}
+.ph-need{display:grid;place-items:center;aspect-ratio:4/5;border:1.5px dashed #9AA8B6;border-radius:6px 6px 6px 48px;background:var(--surface);color:var(--sub);font-size:.95rem;text-align:center;line-height:1.6;padding:16px}
+.ph-need b{display:block;font-family:var(--head);color:var(--ink);font-size:1.05rem}
+.doc h2{margin-bottom:28px}
+.doc h3{font-size:1.6rem}
+.doc h3 small{display:block;font-family:var(--body);font-weight:400;font-size:.9rem;color:var(--sub);letter-spacing:.04em}
+.doc .msg{margin-top:18px;max-width:36em}
+.career{margin:24px 0 0;display:grid;grid-template-columns:5.5em minmax(0,1fr);gap:6px 16px;font-size:.93rem}
+.career dt{font-family:var(--num);color:var(--sub)}
+.career dd{margin:0}
+.fake{margin-top:12px;color:var(--sub);font-size:.85rem}
+.staff{margin-top:44px;border-top:1px solid var(--line)}
+.staff p{padding:16px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:9em minmax(0,1fr);gap:4px 20px;font-size:.95rem}
+.staff b{font-family:var(--head)}
+
+/* 院内：大小の写真 */
+.inside{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto;gap:18px}
+.inside figure{margin:0}
+.inside img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+.inside .big{grid-row:1 / 3}
+.inside .big img{aspect-ratio:auto;min-height:100%}
+.inside figure:not(.big) img{aspect-ratio:4/3;height:auto}
+.inside figcaption{margin-top:8px;font-size:.9rem;color:var(--sub)}
+.inside .big figcaption{color:var(--ink)}
+.inside-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:16px 64px;align-items:end;margin-bottom:36px}
+.inside-head .intro{margin-top:0}
+
+/* アクセス */
+.acc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:40px 72px;align-items:start}
+.acc-big{margin-top:18px;font-family:var(--head);font-size:clamp(1.3rem,2.2vw,1.6rem);line-height:1.5}
+.acc-big .num{font-size:1.25em;color:var(--blue)}
+.acc dl{margin:0;display:grid;grid-template-columns:5em minmax(0,1fr);gap:0;border-top:1.5px solid var(--ink)}
+.acc dt,.acc dd{padding:16px 0;border-bottom:1px solid var(--line)}
+.acc dt{color:var(--sub);font-size:.92rem}
+.acc dd{margin:0}
+.acc-act{margin-top:24px;display:flex;flex-wrap:wrap;gap:12px}
+
+.ft{border-top:1px solid var(--line);padding:32px 0 40px;font-size:.88rem;color:var(--sub)}
+.ft .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px}
+
+.sp-bar{display:none}
+
+@media (max-width:1060px){.nav{display:none}}
+@media (max-width:900px){
+  .fv-top,.hours-grid,.first,.price-head,.doc,.inside-head,.acc{grid-template-columns:minmax(0,1fr)}
+  .first-side{position:static}
+  .draw{margin-top:20px}
+  .menu li{grid-template-columns:minmax(0,1fr)}
+  .menu .tag{text-align:left}
+  .doc .ph-need{max-width:280px}
+}
+@media (max-width:760px){
+  .ptbl,.ptbl tbody,.ptbl tr,.ptbl th,.ptbl td{display:block;width:auto}
+  .ptbl thead{display:none}
+  .ptbl tbody tr{padding:20px 18px;border-bottom:1px solid var(--line)}
+  .ptbl tbody tr:last-child{border-bottom:0}
+  .ptbl tbody th,.ptbl tbody td,.ptbl .yen,.ptbl .term{padding:0;border:0;width:auto}
+  .ptbl tbody td{margin-top:12px}
+  .ptbl tbody td::before{content:attr(data-label);display:block;font-size:.8rem;font-weight:700;color:var(--sub)}
+}
+@media (max-width:640px){
+  html{scroll-padding-top:calc(68px + var(--safe-top))}
+  .hd .wrap{min-height:62px;gap:10px}
+  .hd-tel,.hd .btn{display:none}
+  .brand b{font-size:18px}
+  .brand small{font-size:11px}
+  .brand svg{width:30px;height:30px}
+  .fs-label{display:none}
+  .fs button{padding:0 10px;font-size:12px}
+  .demo{font-size:11px}
+  .fv{padding-top:24px}
+  .fv-lead{font-size:.95rem}
+  .fv h1{font-size:1.75rem}
+  .fv-act{margin-top:18px;flex-wrap:nowrap;gap:16px}
+  .fv-act .btn{padding:0 18px}
+  .fv-tel b{font-size:1.15rem}
+  .fv-photo{margin-top:22px}
+  .fv-photo img{height:250px;border-radius:6px 6px 6px 36px}
+  .now{left:10px;right:10px;bottom:10px;min-width:0;padding:10px 16px;line-height:1.5}
+  .now p:first-child{font-size:12px}
+  .now strong{font-size:1rem;margin:0}
+  .now .times{margin:0;font-size:.85rem}
+  .hours{padding-top:56px}
+  .tbl col.t{width:25%}
+  .tbl th,.tbl td{padding:12px 1px}
+  .tbl thead th{font-size:14px}
+  .tbl tbody th{font-size:11px;padding-left:2px}
+  .tbl tbody th b{font-size:13px;letter-spacing:-.02em}
+  .tbl td{font-size:13px}
+  .tbl td.o::before{width:11px;height:11px;border-width:2px}
+  .tbl td.s{font-size:10.5px;letter-spacing:-.02em}
+  .tbl thead .today-col::after{font-size:10px}
+  .steps li{grid-template-columns:44px minmax(0,1fr);gap:0 14px}
+  .steps li::before{width:40px;height:40px;line-height:40px;font-size:1.25rem}
+  .steps li:not(:last-child)::after{left:20px;top:48px}
+  .first-bring,.staff p{grid-template-columns:minmax(0,1fr)}
+  .menu h3{font-size:1.3rem}
+  .inside{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .inside .big{grid-column:1 / -1;grid-row:auto}
+  .inside .big img{aspect-ratio:4/3.4;height:auto;min-height:0}
+  .acc dl{grid-template-columns:4.2em minmax(0,1fr)}
+  .ft{padding-bottom:calc(104px + var(--safe-bottom))}
+  .sp-bar{display:grid;grid-template-columns:1.4fr 1fr 1fr;position:fixed;left:0;right:0;bottom:0;z-index:50;background:#fff;border-top:1px solid var(--line);padding:8px 10px calc(8px + var(--safe-bottom));gap:8px}
+  .sp-bar a{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:54px;border-radius:10px;text-decoration:none;color:var(--ink);font-size:13px;font-weight:700;line-height:1.3;border:1px solid var(--line)}
+  .sp-bar a.rsv{background:var(--blue);border-color:var(--blue);color:#fff;font-size:15px}
+  .sp-bar small{font-family:var(--num);font-weight:500;font-size:11px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .is-open .dot{animation:none}
+  .js .draw path{stroke-dasharray:none;stroke-dashoffset:0;animation:none!important}
+}
+/* FV写真の青白さを和らげ、少し暖かく */
+.fv img,.fv-photo img,.hero img{filter:saturate(.92) sepia(.12) brightness(1.02)}
+</style>
+</head>
+<body>
+
+<div class="util">
+  <div class="wrap">
+    <p class="demo">架空の歯科医院のデザイン見本です（制作：プラチナ企画）</p>
+    <div class="fs" role="group" aria-label="文字の大きさ">
+      <span class="fs-label">文字の大きさ</span>
+      <button type="button" data-fs="normal" aria-pressed="true">標準</button>
+      <button type="button" data-fs="large" aria-pressed="false">大きく</button>
+    </div>
+  </div>
+</div>
+
+<header class="hd" id="hd">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="みなみ台はなみずき歯科 トップへ">
+      <svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><rect width="36" height="36" rx="10" fill="#2F6FB0"/><path d="M11 13.5c0-3.2 3.4-4.4 5.4-3 .9.6 2.3.6 3.2 0 2-1.4 5.4-.2 5.4 3 0 3.4-1.5 5-2 8.5-.3 2.4-.9 4.5-2 4.5-1.3 0-1.2-4-3-4s-1.7 4-3 4c-1.1 0-1.7-2.1-2-4.5-.5-3.5-2-5.1-2-8.5z" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      <span><small>小児歯科・予防歯科</small><b>はなみずき歯科</b></span>
+    </a>
+    <nav class="nav" aria-label="メイン">
+      <a href="#hours">診療時間</a>
+      <a href="#first">はじめての方へ</a>
+      <a href="#menu">診療内容</a>
+      <a href="#price">自費診療の料金</a>
+      <a href="#access">アクセス</a>
+    </nav>
+    <a class="hd-tel" href="tel:0300001234">03-0000-1234</a>
+    <a class="btn" href="#first">Web予約</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="fv">
+    <div class="wrap">
+      <div class="fv-top">
+        <h1><span class="nw">土曜も診ています。</span><br><span class="nw">お子さんの歯も、</span><span class="nw">ご自分の歯も。</span></h1>
+        <div>
+          <p class="fv-lead">みなみ台駅から歩いて3分。待合にキッズスペースがあり、お子さん連れでもご自分の治療を受けられます。Web予約は24時間受付。</p>
+          <div class="fv-act">
+            <a class="btn" href="#first">Webで予約する</a>
+            <a class="fv-tel" href="tel:0300001234"><small>お電話はこちら</small><b>03-0000-1234</b></a>
+          </div>
+        </div>
+      </div>
+      <figure class="fv-photo">
+        <img src="img/fv.jpg" alt="窓から光の入る明るい診療室。白い棚と診療台が並んでいます" width="1600" height="1070" fetchpriority="high">
+        <div class="now" aria-live="polite">
+          <p id="todayDay">本日の診療</p>
+          <strong id="todayState"><span class="dot"></span><span>確認中</span></strong>
+          <p class="times" id="todayTimes">9:30–13:00 ／ 14:30–19:00</p>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="hours" id="hours">
+    <div class="wrap hours-grid">
+      <div class="hours-side">
+        <h2>診療時間</h2>
+        <p>平日は19時まで。土曜は午後5時まで診ています。</p>
+      </div>
+      <div>
+        <table class="tbl" id="tbl">
+          <caption class="sr">診療時間表</caption>
+          <colgroup><col class="t"><col span="7"></colgroup>
+          <thead><tr><th scope="col"><span class="sr">時間帯</span></th><th scope="col" data-d="1">月</th><th scope="col" data-d="2">火</th><th scope="col" data-d="3">水</th><th scope="col" data-d="4">木</th><th scope="col" data-d="5">金</th><th scope="col" data-d="6">土</th><th scope="col" data-d="0">日祝</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">午前<b>9:30–13:00</b></th><td class="o" data-d="1"><span class="sr">診療</span></td><td class="o" data-d="2"><span class="sr">診療</span></td><td class="o" data-d="3"><span class="sr">診療</span></td><td class="x" data-d="4">休</td><td class="o" data-d="5"><span class="sr">診療</span></td><td class="s" data-d="6">9:00<br>–13:00</td><td class="x" data-d="0">休</td></tr>
+            <tr><th scope="row">午後<b>14:30–19:00</b></th><td class="o" data-d="1"><span class="sr">診療</span></td><td class="o" data-d="2"><span class="sr">診療</span></td><td class="o" data-d="3"><span class="sr">診療</span></td><td class="x" data-d="4">休</td><td class="o" data-d="5"><span class="sr">診療</span></td><td class="s" data-d="6">14:00<br>–17:00</td><td class="x" data-d="0">休</td></tr>
+          </tbody>
+        </table>
+        <p class="hours-notes">休診日は木曜・日曜・祝日です。最終受付は診療終了の30分前。急な痛みや腫れは、予約がなくてもお電話ください。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec sec-surface" id="first">
+    <div class="wrap first">
+      <div class="first-side">
+        <h2>はじめての方へ</h2>
+        <p class="intro">初診の日は、いきなり削ることはしません。お口の中を見て、写真と一緒に説明してから、治療の順番を決めます。</p>
+        <svg class="draw" id="draw" viewBox="0 0 200 170" role="img" aria-label="歯と歯ブラシの線画">
+          <path d="M44 52c0-22 22-30 37-21 7 4 15 4 22 0 15-9 37-1 37 21 0 24-9 36-13 60-3 20-6 40-15 40-10 0-9-30-20-30s-10 30-20 30c-9 0-12-20-15-40-4-24-13-36-13-60z"/>
+          <path class="smile" d="M74 82q18 14 36 0"/>
+          <path class="brush" d="M146 160L188 74M178 94l9 4M182 86l9 4M186 78l9 4"/>
+        </svg>
+      </div>
+      <div>
+        <ol class="steps">
+          <li><div><h3>予約をとる</h3><p>Web予約なら24時間、空いている時間をその場で選べます。お電話は診療時間内に受け付けています。</p><p class="note">見本のため、このページの予約ボタンは予約画面につながりません。</p></div></li>
+          <li><div><h3>問診票を書く</h3><p>気になるところ、飲んでいるお薬、治療の希望を書いていただきます。予約後に届くメールから、来院前に入力もできます。</p></div></li>
+          <li><div><h3>お話をうかがう</h3><p>個室で、歯科医師が困っていることを直接うかがいます。「できるだけ削りたくない」「通える回数が少ない」といったご希望もこの時に。</p></div></li>
+          <li><div><h3>検査と説明</h3><p>レントゲンとお口の写真を撮り、画面で見ながら説明します。治療の方法が複数あるときは、保険と自費の違いも含めてお伝えします。</p></div></li>
+          <li><div><h3>治療を始める</h3><p>痛みが強い場合は、その日のうちに応急の処置をします。2回目以降の予約は、お帰りの際に受付でとれます。</p></div></li>
+        </ol>
+        <div class="first-bring">
+          <b>持ち物</b>
+          <p>保険証（マイナ保険証も使えます）、お薬手帳、お子さんは医療証。初診はおよそ60分です。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="menu">
+    <div class="wrap">
+      <div class="menu-head">
+        <h2>診療内容</h2>
+        <p class="intro">むし歯の治療から入れ歯まで、ご家族それぞれの歯をここで診ます。保険で治療できるものは保険で行い、自費の治療はご希望があるときだけご案内します。</p>
+      </div>
+      <ul class="menu">
+        <li>
+          <h3>一般歯科</h3>
+          <p>むし歯、歯ぐきの腫れ、しみる、欠けた。麻酔は表面に塗る麻酔をしてから細い針で行い、痛みに配慮して進めます。<span class="words">むし歯／歯周病／知覚過敏／親知らずの相談</span></p>
+          <p class="tag">保険診療</p>
+        </li>
+        <li>
+          <h3>小児歯科</h3>
+          <p>はじめての歯医者は、器具にさわってみるところから。泣いてしまっても大丈夫です。仕上げみがきのコツも保護者の方にお伝えします。<span class="words">むし歯予防のフッ素／シーラント／歯並びの相談</span><span class="kid-mark">待合にキッズスペースがあります</span></p>
+          <p class="tag">保険診療<br>（医療証が使えます）</p>
+        </li>
+        <li>
+          <h3>予防・クリーニング</h3>
+          <p>歯科衛生士が、歯石と着色をとり、みがき残しの場所をお伝えします。3〜4か月に1回の定期健診をおすすめしています。<span class="words">歯石除去／PMTC／定期健診のお知らせ（はがき・メール）</span></p>
+          <p class="tag">保険診療<br>一部自費</p>
+        </li>
+        <li>
+          <h3>入れ歯</h3>
+          <p>合わない、痛い、外れやすい入れ歯の調整から。保険の入れ歯と、薄くて温度が伝わりやすい金属床の入れ歯（自費）があります。<span class="words">入れ歯の調整・修理／部分入れ歯／総入れ歯</span></p>
+          <p class="tag">保険診療<br>自費（金属床）</p>
+        </li>
+        <li class="self">
+          <h3>自費診療</h3>
+          <p>インプラント、セラミックの被せ物、マウスピース矯正、ホワイトニング。費用・期間・リスクを<a href="#price">料金表</a>にまとめています。</p>
+          <p class="tag">自費診療</p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec sec-surface" id="price">
+    <div class="wrap">
+      <div class="price-head">
+        <h2>自費診療の料金</h2>
+        <p class="intro">保険がきかない治療の標準的な費用です。お口の状態によって変わるため、検査のあとに見積書をお渡しし、ご納得いただいてから始めます。</p>
+      </div>
+      <table class="ptbl">
+        <caption class="sr">自費診療の費用・期間・主なリスク</caption>
+        <thead><tr><th scope="col">治療</th><th scope="col">標準的な費用（税込）</th><th scope="col">期間・回数</th><th scope="col">主なリスク・副作用</th></tr></thead>
+        <tbody>
+          <tr>
+            <th scope="row">インプラント<small>1本・被せ物まで</small></th>
+            <td class="yen" data-label="標準的な費用（税込）"><b>385,000円〜</b><small>骨を足す処置は別途</small></td>
+            <td class="term" data-label="期間・回数">3〜6か月<br>通院5〜8回</td>
+            <td class="risk" data-label="主なリスク・副作用">手術後に腫れ・痛み・内出血が出ることがあります。骨の量によっては骨を足す処置が必要です。糖尿病や喫煙は治りに影響します。手入れが不十分だと周りの歯ぐきに炎症（インプラント周囲炎）が起きることがあります。</td>
+          </tr>
+          <tr>
+            <th scope="row">セラミック<small>被せ物 1本</small></th>
+            <td class="yen" data-label="標準的な費用（税込）"><b>132,000円</b><small>詰め物は 66,000円</small></td>
+            <td class="term" data-label="期間・回数">2〜4週間<br>通院2〜3回</td>
+            <td class="risk" data-label="主なリスク・副作用">歯を削る必要があります。強くかみしめる癖があると割れることがあります。治療後しばらく、しみることがあります。</td>
+          </tr>
+          <tr>
+            <th scope="row">マウスピース矯正<small>全体の歯並び</small></th>
+            <td class="yen" data-label="標準的な費用（税込）"><b>880,000円〜</b><small>前歯だけは 330,000円〜</small></td>
+            <td class="term" data-label="期間・回数">1年〜2年半<br>1〜3か月に1回通院</td>
+            <td class="risk" data-label="主なリスク・副作用">1日20時間以上つけないと計画どおりに動きません。歯が動くときに痛みや違和感が出ます。歯の根が短くなる、歯ぐきが下がることがあります。治療後は保定装置をつけないと後戻りします。</td>
+          </tr>
+          <tr>
+            <th scope="row">ホワイトニング<small>医院で行う／ご自宅で行う</small></th>
+            <td class="yen" data-label="標準的な費用（税込）"><b>22,000円</b><small>医院で1回（上下）</small><b>33,000円</b><small>ご自宅用（マウスピースと薬剤2週間分）</small></td>
+            <td class="term" data-label="期間・回数">医院 1〜3回<br>ご自宅 2週間〜</td>
+            <td class="risk" data-label="主なリスク・副作用">一時的にしみることがあります。白くなり方には個人差があり、時間とともに色は戻ります。詰め物や被せ物は白くなりません。</td>
+          </tr>
+        </tbody>
+      </table>
+      <ul class="price-notes">
+        <li>表示の金額は、デザイン見本用の仮の価格です。</li>
+        <li>自費診療は公的医療保険の対象外です。医療費控除の対象になる場合があります。</li>
+        <li>分割払い・クレジットカードについては受付でご相談ください。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec" id="staff">
+    <div class="wrap doc">
+      <div class="ph-need" role="img" aria-label="院長の写真（撮影予定）"><p><b>要撮影</b>院長の写真<br>（診療室で・白衣）</p></div>
+      <div>
+        <h2>医師・スタッフ</h2>
+        <h3>院長　花水 さやか<small>歯科医師</small></h3>
+        <p class="msg">二人の子どもを育てながら、地元のみなみ台で開院しました。歯医者が苦手なお子さんも、何年も通っていない大人の方も、まずは話を聞かせてください。治療を急がせることはしません。</p>
+        <dl class="career">
+          <dt class="num">2008年</dt><dd>〇〇大学 歯学部 卒業</dd>
+          <dt class="num">2008年</dt><dd>〇〇大学病院 小児歯科 勤務</dd>
+          <dt class="num">2014年</dt><dd>都内の歯科医院で副院長</dd>
+          <dt class="num">2019年</dt><dd>はなみずき歯科 開院</dd>
+        </dl>
+        <p class="fake">※人物・経歴・資格はデザイン見本用の架空のものです。</p>
+        <div class="staff">
+          <p><b>歯科衛生士　4名</b><span>クリーニングと定期健診、お子さんのフッ素塗布を担当します。</span></p>
+          <p><b>受付・助手　3名</b><span>予約の変更やお支払いのご相談は受付へ。</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec sec-surface" id="inside">
+    <div class="wrap">
+      <div class="inside-head">
+        <h2>院内のようす</h2>
+        <p class="intro">待合の奥にキッズスペースがあり、受付から様子が見えます。ベビーカーのまま診療室まで入れます。</p>
+      </div>
+      <div class="inside">
+        <figure class="big"><img src="img/kids.jpg" alt="おもちゃと絵本が並ぶ棚と、小さないすのあるキッズスペース" width="933" height="1400" loading="lazy"><figcaption><span class="kid-mark" style="margin-top:0">キッズスペース</span></figcaption></figure>
+        <figure><img src="img/machiai.jpg" alt="白い壁に沿っていすが並ぶ待合室" width="1196" height="1400" loading="lazy"><figcaption>待合室</figcaption></figure>
+        <figure><img src="img/shinryo.jpg" alt="青い診療台のある診療室" width="1600" height="1067" loading="lazy"><figcaption>診療室</figcaption></figure>
+        <figure><img src="img/chair.jpg" alt="窓ぎわの白い診療台" width="933" height="1400" loading="lazy"><figcaption>個室の診療室</figcaption></figure>
+        <figure><img src="img/haburashi.jpg" alt="ガラスのコップに立てた歯ブラシ" width="1200" height="1200" loading="lazy"><figcaption>歯ブラシの販売もしています</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="access">
+    <div class="wrap acc">
+      <div>
+        <h2>アクセス</h2>
+        <p class="acc-big">みなみ台駅 南口から<br>歩いて<span class="num">3</span>分</p>
+        <p class="intro">駅前のロータリーを右へ。郵便局の向かい、1階の青い看板が目印です。</p>
+      </div>
+      <div>
+        <dl>
+          <dt>住所</dt><dd>〒000-0000 東京都〇〇区みなみ台2-14-6 1階（架空）</dd>
+          <dt>電話</dt><dd><a class="num" href="tel:0300001234">03-0000-1234</a></dd>
+          <dt>休診日</dt><dd>木曜・日曜・祝日</dd>
+          <dt>駐車場</dt><dd>提携の駐車場があります（1時間分サービス）</dd>
+        </dl>
+        <div class="acc-act">
+          <a class="btn btn-line" href="https://www.google.com/maps/search/?api=1&amp;query=%E6%AD%AF%E7%A7%91" target="_blank" rel="noopener">Googleマップで開く</a>
+          <a class="btn" href="#first">Webで予約する</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="ft">
+  <div class="wrap">
+    <p>みなみ台はなみずき歯科（架空）　小児歯科・予防歯科・一般歯科</p>
+    <p>架空の歯科医院のデザイン見本です（制作：プラチナ企画）</p>
+  </div>
+</footer>
+
+<nav class="sp-bar" aria-label="すぐに使うボタン">
+  <a class="rsv" href="#first">Web予約</a>
+  <a href="tel:0300001234">電話<small>03-0000-1234</small></a>
+  <a href="#access">地図</a>
+</nav>
+
+<script>
+(() => {
+  const html = document.documentElement;
+  html.classList.add('js');
+
+  // 文字の大きさ（次に開いたときも残す。保存できない環境でも動く）
+  const btns = document.querySelectorAll('[data-fs]');
+  const apply = v => { html.classList.toggle('is-large', v === 'large'); btns.forEach(b => b.setAttribute('aria-pressed', b.dataset.fs === v)); };
+  let saved = 'normal'; try { saved = localStorage.getItem('fs') || 'normal'; } catch (e) {}
+  apply(saved);
+  btns.forEach(b => b.addEventListener('click', () => { apply(b.dataset.fs); try { localStorage.setItem('fs', b.dataset.fs); } catch (e) {} }));
+
+  const hd = document.getElementById('hd');
+  addEventListener('scroll', () => hd.classList.toggle('is-scrolled', scrollY > 8), {passive:true});
+
+  // 線を描くSVG：見えたときに1回だけ
+  const svg = document.getElementById('draw');
+  svg.querySelectorAll('path').forEach(p => p.style.setProperty('--len', Math.ceil(p.getTotalLength())));
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { svg.classList.add('is-on'); io.disconnect(); } }, {threshold:.5});
+    io.observe(svg);
+  } else svg.classList.add('is-on');
+
+  // いま診療中か（0時からの分）。祝日は判定しないので表と注記で補う
+  const H = {1:[[570,780],[870,1140]],2:[[570,780],[870,1140]],3:[[570,780],[870,1140]],5:[[570,780],[870,1140]],6:[[540,780],[840,1020]]};
+  const names = ['日','月','火','水','木','金','土'];
+  const fmt = m => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+  const nextOpen = d => { for (let i = 1; i <= 7; i++) { const n = (d + i) % 7; if (H[n]) return `${i === 1 ? '明日' : names[n] + '曜日'} ${fmt(H[n][0][0])}から`; } };
+  const state = document.getElementById('todayState');
+  function update() {
+    const now = new Date(), d = now.getDay(), m = now.getHours() * 60 + now.getMinutes();
+    const slots = H[d];
+    let text, times, open = false;
+    if (!slots) { text = '本日は休診日です'; times = `次の診療：${nextOpen(d)}`; }
+    else {
+      times = slots.map(s => `${fmt(s[0])}–${fmt(s[1])}`).join(' ／ ');
+      const cur = slots.find(s => m >= s[0] && m < s[1]);
+      if (cur) { open = true; text = `診療中（${fmt(cur[1])}まで）`; }
+      else if (m < slots[0][0]) text = `本日は ${fmt(slots[0][0])} から`;
+      else if (m < slots[1][0]) text = `午後は ${fmt(slots[1][0])} から`;
+      else { text = '本日の診療は終了しました'; times = `次の診療：${nextOpen(d)}`; }
+    }
+    document.getElementById('todayDay').textContent = `本日（${names[d]}曜日）`;
+    document.getElementById('todayTimes').textContent = times;
+    state.classList.toggle('is-open', open);
+    state.querySelector('.dot').classList.toggle('off', !open);
+    state.querySelector('span:last-child').textContent = text;
+    document.querySelectorAll('#tbl [data-d]').forEach(c => c.classList.toggle('today-col', +c.dataset.d === d));
+  }
+  update(); setInterval(update, 60000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>タケリア・チスパ｜学芸大学のタコス（デザイン見本）</title>
+<meta name="description" content="毎朝トウモロコシを挽いてトルティーヤを打つ、学芸大学駅前のタコス屋のデザイン見本です（架空の店）。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=M+PLUS+Rounded+1c:wght@500;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FFFFFF;     /* 背景：白 */
+  --ink:#24201C;       /* 文字：墨（純黒にしない） */
+  --ink-2:#5E5750;     /* 補足の文字 */
+  --rule:#E6E1DA;      /* 罫線 */
+  --chile:#C8352B;     /* 唐辛子の赤：予約・電話・価格 */
+  --cempa:#E9B44C;     /* マリーゴールド：版ズレ・テイクアウトの面 */
+  --agave:#1F6F6A;     /* 深い青緑：ドリンクの面・刷り色 */
+
+  --latin:"Bricolage Grotesque","Zen Kaku Gothic New",sans-serif;
+  --round:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN",sans-serif;
+  --body:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic Medium",sans-serif;
+  --gutter:clamp(16px,5vw,64px);
+  --max:1200px;
+  --top:env(safe-area-inset-top,0px);
+  --bottom:env(safe-area-inset-bottom,0px);
+  --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:calc(72px + var(--top))}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.85;letter-spacing:.02em;
+  overflow-wrap:anywhere;line-break:strict;text-autospace:normal;text-spacing-trim:trim-start;font-kerning:none;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--round);font-weight:800;margin:0;line-height:1.35;letter-spacing:.03em;font-feature-settings:"palt";font-kerning:normal}
+@supports (word-break:auto-phrase){h1,h2,h3{word-break:auto-phrase;text-wrap:balance}}
+p{margin:0}
+a{color:inherit}
+img{display:block;max-width:100%;height:auto}
+:focus-visible{outline:3px solid var(--agave);outline-offset:3px;border-radius:4px}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
+.yen{font-family:var(--latin);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:0}
+.nw{white-space:nowrap;display:inline-block}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ── 演出①リソグラフ風：版ズレ（2色目を multiply で重ねる） ── */
+.riso{position:relative;--mis:var(--cempa);--off:.045em}
+.riso::after{content:attr(data-text);content:attr(data-text) / "";position:absolute;inset:0;color:var(--mis);mix-blend-mode:multiply;
+  transform:translate(var(--off),calc(var(--off)*.7));pointer-events:none;white-space:inherit}
+/* 写真の上の紙の粒（SVGノイズ） */
+.grain{position:relative;isolation:isolate}
+.grain::after{content:"";position:absolute;inset:0;background:var(--grain);opacity:.22;mix-blend-mode:multiply;pointer-events:none;z-index:2}
+/* 一色刷りの写真（白い紙にインクが乗る見え方） */
+.print{background:var(--ink-color,var(--agave))}
+.print img{filter:grayscale(1) contrast(1.25) brightness(1.12);mix-blend-mode:screen}
+
+/* ── ヘッダー ── */
+.hd{position:fixed;inset:0 0 auto;z-index:50;padding-top:var(--top);transition:background .3s,box-shadow .3s}
+.hd.is-solid{background:rgba(255,255,255,.96);box-shadow:0 1px 0 var(--rule)}
+.hd-in{display:flex;align-items:center;justify-content:space-between;gap:16px;height:68px;padding:0 var(--gutter)}
+.logo{display:flex;align-items:baseline;gap:10px;text-decoration:none;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+.hd.is-solid .logo{opacity:1;visibility:visible}
+.logo b{font-family:var(--latin);font-weight:800;font-size:26px;letter-spacing:-.01em;color:var(--chile)}
+.logo small{font-size:12px;color:var(--ink-2);letter-spacing:.06em}
+.nav{display:flex;align-items:center;gap:26px;font-size:14px;font-weight:500}
+.nav a{text-decoration:none;padding:6px 0;background:linear-gradient(var(--chile),var(--chile)) 0 100%/0 2px no-repeat;transition:background-size .25s}
+.nav a:hover{background-size:100% 2px}
+.nav .tel-s{font-family:var(--latin);font-weight:700;font-size:16px;color:var(--chile);background:none}
+
+/* ── FV ── */
+.fv{padding:calc(96px + var(--top)) 0 clamp(48px,6vw,80px)}
+.fv-in{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:40px clamp(32px,5vw,72px);align-items:center}
+.mark{font-family:var(--latin);font-weight:800;font-size:clamp(72px,10.4vw,148px);line-height:.9;letter-spacing:-.035em;color:var(--chile);margin:0 0 10px -.05em;white-space:nowrap;
+  font-variation-settings:"opsz" 96}
+.mark.riso{--mis:var(--cempa);--off:.04em}
+.mark-sub{font-size:13px;color:var(--ink-2);letter-spacing:.08em;margin-bottom:clamp(24px,3vw,36px)}
+.fv h1{font-size:clamp(27px,2.9vw,38px);white-space:pre-line}
+.fv h1.riso{--off:.03em}
+.fv .lead{margin-top:16px;font-size:clamp(15px,1.25vw,16px);color:var(--ink-2);max-width:29em}
+.fv-act{display:flex;flex-wrap:wrap;align-items:center;gap:12px 14px;margin-top:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 26px;border-radius:999px;font-weight:700;font-size:15px;text-decoration:none;
+  background:var(--chile);color:#fff;transition:transform .15s,background .2s}
+.btn:hover{background:#A92A21}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:18px;height:18px;flex:none}
+.status{display:inline-flex;align-items:center;gap:9px;min-height:52px;padding:0 18px;border:2px solid var(--ink);border-radius:999px;font-size:14px;font-weight:700;text-decoration:none;transition:background .2s}
+.status:hover{background:#FBF3E1}
+.status i{width:9px;height:9px;border-radius:50%;background:var(--ink-2)}
+.status.is-open i{background:#2F9B58;box-shadow:0 0 0 0 rgba(47,155,88,.5);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(47,155,88,0)}100%{box-shadow:0 0 0 0 rgba(47,155,88,0)}}
+.fv-pic{position:relative;margin:0}
+.fv-pic::before{content:"";position:absolute;inset:7% -4% -5% 9%;background:var(--cempa);transform:rotate(2.2deg)}
+.fv-pic .grain{transform:rotate(-1.6deg)}
+.fv-pic img{width:100%;aspect-ratio:5/4;object-fit:cover}
+.fv-pic figcaption{position:absolute;left:-14px;bottom:-18px;z-index:3;background:var(--ink);color:#fff;font-size:12px;padding:6px 12px;transform:rotate(-3deg)}
+
+/* ── 演出②流れる帯 ── */
+.bands{position:relative;overflow:hidden;padding:26px 0 34px}
+.band{width:110%;margin-left:-5%;overflow:hidden;position:relative}
+.band:first-child{background:var(--chile);color:#fff;transform:rotate(-1.6deg)}
+.band+.band{background:var(--cempa);color:var(--ink);transform:rotate(1.2deg);margin-top:-6px}
+.band::after{content:"";position:absolute;inset:0;background:var(--grain);opacity:.25;mix-blend-mode:multiply;pointer-events:none}
+.track{display:flex;width:max-content;animation:slide 46s linear infinite}
+.band+.band .track{animation-direction:reverse;animation-duration:58s}
+.track span{display:flex;align-items:center;gap:22px;padding:13px 22px 13px 0;white-space:nowrap;font-family:var(--latin);font-weight:800;font-size:clamp(20px,2.4vw,30px);letter-spacing:-.01em}
+.track span small{font-family:var(--round);font-weight:800;font-size:.62em;letter-spacing:.04em}
+.track svg{width:.8em;height:.8em;flex:none}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+/* ── メニュー ── */
+.sec{padding:clamp(80px,10vw,136px) 0}
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 64px;align-items:end;margin-bottom:clamp(44px,6vw,72px)}
+.sec-head h2{font-size:clamp(30px,4vw,52px)}
+.sec-head p{color:var(--ink-2);max-width:32em}
+.sec-head p b{color:var(--ink)}
+.sec-head.stack{grid-template-columns:minmax(0,1fr);gap:16px}
+.togo .sec-head.stack h2{font-size:clamp(34px,5.2vw,68px)}
+.spice{display:inline-flex;align-items:center;gap:3px;vertical-align:middle}
+.spice svg{width:17px;height:17px;fill:#D6CEC3;color:#D6CEC3}
+.spice svg.on{color:var(--chile)}
+.spice svg.on{fill:var(--chile)}
+.spice-txt{font-size:12px;color:var(--ink-2);margin-left:6px}
+
+.feature{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:32px clamp(32px,5vw,72px);align-items:center;margin-bottom:clamp(64px,8vw,104px)}
+.feature .ph{position:relative}
+.feature .ph img{width:100%;aspect-ratio:4/3;object-fit:cover}
+.feature .sub{position:absolute;right:-18px;bottom:-34px;width:38%;--ink-color:var(--chile);box-shadow:0 0 0 6px #fff;transform:rotate(3deg)}
+.feature .sub img{aspect-ratio:1;object-fit:cover}
+.es{display:block;font-family:var(--latin);font-weight:700;font-size:15px;color:var(--agave);letter-spacing:0;margin-bottom:4px}
+.feature h3{font-size:clamp(28px,3vw,40px)}
+.feature .desc{margin:16px 0 22px;max-width:24em}
+.price-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px}
+.price{font-size:15px}
+.price .yen{font-size:30px;color:var(--chile);margin-right:2px}
+.feature .yen{font-size:40px}
+
+.items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(56px,7vw,88px) clamp(32px,5vw,72px)}
+.items li:nth-child(even){margin-top:clamp(0px,8vw,110px)}
+.items,.extras{list-style:none;margin:0;padding:0}
+.item .ph{margin-bottom:22px}
+.item .ph img{width:100%;aspect-ratio:3/2;object-fit:cover}
+.item:nth-child(1) .ph{transform:rotate(-1.2deg)}
+.item:nth-child(4) .ph{transform:rotate(1deg)}
+.item .top{display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+.item h3{font-size:clamp(21px,2vw,26px)}
+.item .price .yen{font-size:26px}
+.item p{margin:10px 0 12px;color:var(--ink-2);max-width:28em}
+
+.extras{margin-top:clamp(64px,8vw,96px);border-top:2px solid var(--ink)}
+.extras li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 28px;align-items:baseline;padding:20px 0;border-bottom:1px solid var(--rule)}
+.extras b{font-family:var(--round);font-weight:800;font-size:18px}
+.extras small{display:block;color:var(--ink-2);font-size:14px}
+.extras .yen{font-size:22px;color:var(--chile)}
+.note{margin-top:22px;font-size:13px;color:var(--ink-2)}
+
+/* ── トルティーヤ ── */
+.masa{padding:clamp(40px,6vw,72px) 0 clamp(96px,12vw,160px)}
+.masa-in{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:48px clamp(40px,6vw,96px);align-items:start}
+.masa-pics{position:relative;padding-bottom:22%}
+.masa-pics .big{--ink-color:var(--chile)}
+.masa-pics .big img{width:100%;aspect-ratio:4/3;object-fit:cover}
+.masa-pics .s1{position:absolute;left:6%;bottom:0;width:46%;--ink-color:var(--agave);transform:rotate(-2.5deg);box-shadow:0 0 0 6px #fff}
+.masa-pics .s2{position:absolute;right:-3%;bottom:6%;width:40%;transform:rotate(2deg);box-shadow:0 0 0 6px #fff}
+.masa-pics .s1 img,.masa-pics .s2 img{aspect-ratio:1;object-fit:cover}
+.masa h2{font-size:clamp(30px,3.8vw,48px);white-space:pre-line;margin-bottom:28px}
+.masa .body p+p{margin-top:1.2em}
+.facts{margin:36px 0 0;border-top:2px solid var(--ink)}
+.facts div{display:grid;grid-template-columns:9em minmax(0,1fr);gap:16px;padding:16px 0;border-bottom:1px solid var(--rule)}
+.facts dt{font-size:14px;color:var(--ink-2)}
+.facts dd{margin:0;font-weight:500}
+
+/* ── ドリンク（青緑の面） ── */
+.drink{background:var(--agave);color:#fff;position:relative}
+.drink::before{content:"";position:absolute;inset:0;background:var(--grain);opacity:.18;mix-blend-mode:multiply;pointer-events:none}
+.drink .wrap{position:relative}
+.drink .riso{--mis:var(--chile);isolation:isolate}
+.drink .riso::after{mix-blend-mode:normal;z-index:-1}
+.drink .sec-head p{color:#D5E7E4}
+.drink-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px clamp(40px,6vw,96px)}
+.dk .ph{margin-bottom:24px;--ink-color:var(--cempa)}
+.dk .ph img{width:100%;aspect-ratio:4/5;object-fit:cover}
+.dk:nth-child(2){margin-top:clamp(0px,10vw,140px)}
+.dk:nth-child(2) .ph{--ink-color:var(--chile)}
+.dk h3{font-size:clamp(24px,2.4vw,30px)}
+.dk p{margin:12px 0 18px;color:#E3EFED;max-width:26em}
+.dk dl{margin:0;border-top:1px solid rgba(255,255,255,.35)}
+.dk dl div{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.2)}
+.dk dd{margin:0;font-family:var(--latin);font-weight:700}
+.soft{margin-top:56px;padding-top:24px;border-top:1px solid rgba(255,255,255,.35);display:flex;flex-wrap:wrap;gap:8px 40px;color:#E3EFED}
+.soft b{color:#fff;font-family:var(--round);font-weight:800}
+
+/* ── テイクアウト（黄の面） ── */
+.togo{background:var(--cempa);position:relative}
+.togo::before{content:"";position:absolute;inset:0;background:var(--grain);opacity:.2;mix-blend-mode:multiply;pointer-events:none}
+.togo .wrap{position:relative}
+.togo .riso{--mis:var(--chile);--off:.035em}
+.togo .sec-head p{color:var(--ink)}
+.togo-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:48px clamp(40px,6vw,96px);align-items:start}
+.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:72px minmax(0,1fr);gap:4px 16px;padding:22px 0;border-top:2px solid var(--ink)}
+.steps li::before{content:counter(s);grid-row:span 2;font-family:var(--latin);font-weight:800;font-size:60px;line-height:.9;color:var(--chile)}
+.steps h3{font-size:21px}
+.steps p{font-size:15px}
+.steps a{font-family:var(--latin);font-weight:700}
+.togo-pic{position:sticky;top:calc(100px + var(--top))}
+.togo-pic img{width:100%;aspect-ratio:3/4;object-fit:cover}
+.togo-pic .btn{margin-top:22px;width:100%}
+.togo-pic small{display:block;margin-top:10px;font-size:13px}
+
+/* ── 店内・営業時間・アクセス ── */
+.info-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px clamp(40px,6vw,96px)}
+.info .ph{--ink-color:var(--agave)}
+.info .ph img{width:100%;aspect-ratio:3/2;object-fit:cover}
+.info-h{font-size:clamp(30px,4vw,52px)}
+.info-lead{margin:14px 0 32px;color:var(--ink-2)}
+.info-grid>div:first-child{align-self:end}
+.info .seats{margin-top:20px;color:var(--ink-2)}
+.week{width:100%;border-collapse:collapse;text-align:center;font-size:14px;margin-bottom:28px}
+.week th,.week td{padding:10px 2px;border-bottom:1px solid var(--rule)}
+.week th{font-family:var(--round);font-weight:800;font-size:15px}
+.week td{font-family:var(--latin);font-weight:500;font-size:13px;line-height:1.4}
+.week .off{color:var(--ink-2);font-family:var(--body)}
+.week .today{background:#FCF1D8}
+.week .today th{color:var(--chile)}
+.week caption{text-align:left;font-size:13px;color:var(--ink-2);caption-side:bottom;padding-top:10px}
+.week tbody th{font-family:var(--body);font-weight:500;font-size:12px;color:var(--ink-2);text-align:left;white-space:nowrap;padding-right:8px}
+.addr{font-size:16px}
+.addr .tel{display:inline-block;margin-top:14px;font-family:var(--latin);font-weight:800;font-size:30px;color:var(--chile);text-decoration:none;letter-spacing:0}
+.addr .tel small{font-family:var(--body);font-weight:400;font-size:13px;color:var(--ink-2);margin-left:8px}
+.map-link{display:inline-flex;align-items:center;gap:10px;margin-top:20px;font-weight:700;padding:12px 20px;border:2px solid var(--ink);border-radius:999px;text-decoration:none;transition:background .2s}
+.map-link:hover{background:var(--ink);color:#fff}
+
+/* ── フッター ── */
+.ft{background:var(--ink);color:#CFC8BF;padding:56px 0 calc(64px + var(--bottom));font-size:13px}
+.ft .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:20px}
+.ft .mk{font-family:var(--latin);font-weight:800;font-size:26px;line-height:1.2;color:var(--cempa);letter-spacing:-.01em}
+.demo{position:fixed;left:0;right:0;bottom:0;z-index:60;margin:0;background:var(--ink);color:#E6E1DA;font-size:11px;line-height:1.4;text-align:center;
+  padding:5px 12px calc(5px + var(--bottom));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* スマホの下部固定バー */
+.spbar{display:none}
+
+/* ── 演出③CSSだけのスクロール連動（最後のキーフレームが完成形） ── */
+@supports (animation-timeline:view()){
+  .pop{animation:pop linear both;animation-timeline:view();animation-range:entry 0% entry 55%}
+  @keyframes pop{from{clip-path:inset(0 0 100% 0);translate:0 40px}to{clip-path:inset(0 0 0 0);translate:0 0}}
+}
+
+@media (max-width:960px){
+  .nav a:not(.tel-s){display:none}
+  .fv-in,.feature,.masa-in,.drink-grid,.togo-grid,.info-grid,.sec-head{grid-template-columns:minmax(0,1fr)}
+  .fv-pic{max-width:640px}
+  .togo-pic{position:relative;top:0;max-width:420px}
+  .dk:nth-child(2){margin-top:0}
+  .info-grid>div:last-child{order:-1}
+}
+@media (max-width:640px){
+  body{font-size:15px}
+  .hd-in{height:60px}
+  .logo b{font-size:23px}
+  .nav{display:none}
+  .fv{padding-top:calc(64px + var(--top));padding-bottom:40px}
+  .fv-in{display:flex;flex-direction:column;align-items:stretch;gap:0}
+  .fv-text{display:contents}
+  .fv-pic{order:-1;margin:0 4px 0 -2px}
+  .fv-pic img{aspect-ratio:4/3}
+  .fv-pic figcaption{display:none}
+  .fv-pic::before{inset:10% -10px -12px 8%}
+  .mark{position:relative;z-index:4;font-size:clamp(76px,24vw,104px);margin:-.36em 0 6px -.04em;-webkit-text-stroke:.07em #fff;paint-order:stroke fill}
+  .mark-sub{margin-bottom:20px;font-size:12px}
+  .fv h1{font-size:clamp(25px,7.2vw,29px)}
+  .fv .lead{font-size:14.5px;margin-top:12px}
+  .fv-act{order:2;margin-top:20px}
+  .fv-act .btn{display:none}
+  .status{min-height:42px;font-size:13px;border-width:1.5px}
+  .items{grid-template-columns:minmax(0,1fr)}
+  .items li:nth-child(even){margin-top:0}
+  .feature .sub{right:-6px;bottom:-26px;width:40%}
+  .extras li{grid-template-columns:minmax(0,1fr) auto}
+  .extras .spice{grid-column:1}
+  .masa-pics .s2{right:0}
+  .facts div{grid-template-columns:7em minmax(0,1fr)}
+  .steps li{grid-template-columns:52px minmax(0,1fr)}
+  .steps li::before{font-size:46px}
+  .week td{font-size:11px}
+  .week th{font-size:13px}
+  .week tbody th{font-size:11px;padding-right:4px}
+  .spbar{display:grid;grid-template-columns:1fr 1.25fr 1fr;position:fixed;left:0;right:0;bottom:calc(25px + var(--bottom));z-index:55;
+    background:#fff;border-top:2px solid var(--ink)}
+  .spbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;text-decoration:none;font-size:12px;font-weight:700}
+  .spbar a+a{border-left:1px solid var(--rule)}
+  .spbar svg{width:20px;height:20px}
+  .spbar .main{background:var(--chile);color:#fff}
+  .ft{padding-bottom:calc(120px + var(--bottom))}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .track{animation:none}
+  .status.is-open i{animation:none}
+  .pop{animation:none!important}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="chili" viewBox="0 0 24 24"><path d="M16.2 3.1c.9-1.3 2.3-1.8 3.7-1.4-.7.3-1.3.8-1.5 1.6 1.6 1 2.3 3 1.6 5.2C18.4 13.9 12.6 19.6 5.4 21c-1.5.3-2.3-1-1.3-2 3.9-3.6 6.7-7.9 7.8-12.1.5-2.1 2.4-3.6 4.3-3.8z"/><path d="M17.4 3.6c.5-.9.3-1.9-.3-2.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+  <symbol id="sun" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1.5l1.8 5.1 4.9-2.3-2.3 4.9 5.1 1.8-5.1 1.8 2.3 4.9-4.9-2.3L12 22.5l-1.8-5.1-4.9 2.3 2.3-4.9L2.5 13l5.1-1.8-2.3-4.9 4.9 2.3z"/></symbol>
+  <symbol id="i-tel" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 8h16l-1.2 12.2a1 1 0 0 1-1 .8H6.2a1 1 0 0 1-1-.8zM8.5 8V6.5a3.5 3.5 0 0 1 7 0V8"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+</svg>
+
+<header class="hd" id="hd">
+  <div class="hd-in">
+    <a class="logo" href="#top"><b>Chispa</b><small>タケリア・チスパ</small></a>
+    <nav class="nav" aria-label="メイン">
+      <a href="#menu">タコス</a>
+      <a href="#masa">トルティーヤ</a>
+      <a href="#drink">夜のお酒</a>
+      <a href="#togo">持ち帰り</a>
+      <a href="#info">営業時間</a>
+      <a class="tel-s" href="tel:0300000000">03-0000-0000</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <!-- FV -->
+  <section class="fv">
+    <div class="wrap fv-in">
+      <div class="fv-text">
+        <p class="mark riso" data-text="Chispa" aria-hidden="true">Chispa</p>
+        <p class="mark-sub"><span class="nw">タケリア・チスパ</span>　<span class="nw">学芸大学駅 東口から徒歩2分のタコス屋</span></p>
+        <h1 class="riso" data-text="トルティーヤは毎朝、&#10;店の奥で打っています。">トルティーヤは毎朝、
+店の奥で打っています。</h1>
+        <p class="lead">タコスは1ピース450円から。昼はプレートで、夜はクラフトビールとメスカルと一緒に。持ち帰りもできます。</p>
+        <div class="fv-act">
+          <a class="status" id="status" href="#info"><i></i><span>営業時間を見る</span></a>
+          <a class="btn" href="tel:0300000000"><svg aria-hidden="true"><use href="#i-tel"/></svg>電話で持ち帰りを頼む</a>
+        </div>
+      </div>
+      <figure class="fv-pic">
+        <div class="grain"><img src="img/hero.jpg" alt="タイルのテーブルに並んだタコスとサルサ、ワカモレ" width="1400" height="934" fetchpriority="high"></div>
+        <figcaption>サルサは卓上に4種</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 流れる帯 -->
+  <div class="bands" aria-hidden="true">
+    <div class="band"><div class="track">
+      <span>AL PASTOR <small>アル・パストール</small><svg><use href="#sun"/></svg>CARNE ASADA <small>カルネ・アサーダ</small><svg><use href="#sun"/></svg>QUESABIRRIA <small>ケサビリア</small><svg><use href="#sun"/></svg>BARBACOA <small>バルバコア</small><svg><use href="#sun"/></svg>PESCADO <small>ペスカド</small><svg><use href="#sun"/></svg></span>
+      <span>AL PASTOR <small>アル・パストール</small><svg><use href="#sun"/></svg>CARNE ASADA <small>カルネ・アサーダ</small><svg><use href="#sun"/></svg>QUESABIRRIA <small>ケサビリア</small><svg><use href="#sun"/></svg>BARBACOA <small>バルバコア</small><svg><use href="#sun"/></svg>PESCADO <small>ペスカド</small><svg><use href="#sun"/></svg></span>
+    </div></div>
+    <div class="band"><div class="track">
+      <span>MEZCAL <small>メスカル</small><svg><use href="#sun"/></svg>CERVEZA <small>樽生ビール</small><svg><use href="#sun"/></svg>JAMAICA <small>ハマイカ</small><svg><use href="#sun"/></svg>HORCHATA <small>オルチャータ</small><svg><use href="#sun"/></svg>PARA LLEVAR <small>お持ち帰り</small><svg><use href="#sun"/></svg></span>
+      <span>MEZCAL <small>メスカル</small><svg><use href="#sun"/></svg>CERVEZA <small>樽生ビール</small><svg><use href="#sun"/></svg>JAMAICA <small>ハマイカ</small><svg><use href="#sun"/></svg>HORCHATA <small>オルチャータ</small><svg><use href="#sun"/></svg>PARA LLEVAR <small>お持ち帰り</small><svg><use href="#sun"/></svg></span>
+    </div></div>
+  </div>
+
+  <!-- メニュー -->
+  <section class="sec" id="menu">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 class="riso" data-text="きょう焼いているタコス">きょう焼いているタコス</h2>
+        <p>すべて1ピースから頼めます。昼（11:30〜15:00）は好きなタコス3ピースに豆とライスがつく<b>プレート <span class="yen">1,300</span>円</b>もどうぞ。</p>
+      </div>
+
+      <article class="feature">
+        <div class="ph">
+          <div class="grain pop"><img src="img/pastor.jpg" alt="赤いマリネの豚肉とライムをのせたタコス・アル・パストール" width="1400" height="934" loading="lazy"></div>
+          <div class="sub print grain pop"><img src="img/trompo.jpg" alt="縦型の串に重ねた豚肉を包丁で削ぐところ" width="1100" height="867" loading="lazy"></div>
+        </div>
+        <div>
+          <span class="es">Al Pastor</span>
+          <h3>アル・パストール</h3>
+          <p class="desc">豚の肩ロースを唐辛子とパイナップルの汁に一晩漬け、縦に積み上げて焼きます。注文が入るたびに外側を削ぐので、焦げた端と柔らかい中が両方入る。迷ったらまずこれを。</p>
+          <div class="price-row">
+            <p class="price"><span class="yen">500</span>円</p>
+            <span class="spice" role="img" aria-label="辛さ 3段階中 1"><svg class="on"><use href="#chili"/></svg><svg><use href="#chili"/></svg><svg><use href="#chili"/></svg><span class="spice-txt" aria-hidden="true">ほんのり</span></span>
+          </div>
+        </div>
+      </article>
+
+      <ul class="items">
+        <li class="item">
+          <div class="ph grain pop"><img src="img/asada.jpg" alt="薄切りの牛肉とライム、刻んだ玉ねぎをのせたタコス" width="823" height="1100" loading="lazy"></div>
+          <div class="top"><h3><span class="es">Carne Asada</span>カルネ・アサーダ</h3><p class="price"><span class="yen">600</span>円</p></div>
+          <p>牛ハラミを炭火で焼き、注文ごとに切り分けます。玉ねぎとパクチー、ライムを絞って。</p>
+          <span class="spice" role="img" aria-label="辛さ 3段階中 0"><svg><use href="#chili"/></svg><svg><use href="#chili"/></svg><svg><use href="#chili"/></svg><span class="spice-txt" aria-hidden="true">辛くない</span></span>
+        </li>
+        <li class="item">
+          <div class="ph grain pop"><img src="img/birria.jpg" alt="チーズと牛肉をはさんで焼いたケサビリアとスープのカップ" width="1100" height="732" loading="lazy"></div>
+          <div class="top"><h3><span class="es">Quesabirria</span>ケサビリア</h3><p class="price"><span class="yen">650</span>円</p></div>
+          <p>唐辛子で煮込んだ牛すねとチーズを、煮汁にくぐらせたトルティーヤで焼きます。カップのスープに浸しながら。</p>
+          <span class="spice" role="img" aria-label="辛さ 3段階中 2"><svg class="on"><use href="#chili"/></svg><svg class="on"><use href="#chili"/></svg><svg><use href="#chili"/></svg><span class="spice-txt" aria-hidden="true">しっかり</span></span>
+        </li>
+        <li class="item">
+          <div class="ph grain pop"><img src="img/carnitas.jpg" alt="ほぐした牛肉に玉ねぎとパクチーをのせ、黄色いトルティーヤで包んだタコスの列" width="1100" height="714" loading="lazy"></div>
+          <div class="top"><h3><span class="es">Barbacoa</span>バルバコア</h3><p class="price"><span class="yen">600</span>円</p></div>
+          <p>牛ほほ肉をクミンとクローブで8時間蒸し煮に。箸でもほどける柔らかさです。</p>
+          <span class="spice" role="img" aria-label="辛さ 3段階中 1"><svg class="on"><use href="#chili"/></svg><svg><use href="#chili"/></svg><svg><use href="#chili"/></svg><span class="spice-txt" aria-hidden="true">ほんのり</span></span>
+        </li>
+        <li class="item">
+          <div class="ph grain pop"><img src="img/pescado.jpg" alt="白身魚のフライにワカモレとクリームをのせたタコス3つ" width="1100" height="734" loading="lazy"></div>
+          <div class="top"><h3><span class="es">Pescado</span>ペスカド</h3><p class="price"><span class="yen">550</span>円</p></div>
+          <p>白身魚をビールの衣で揚げ、ワカモレとライムのクリームを。辛いものが苦手な方や、お子さんにも。</p>
+          <span class="spice" role="img" aria-label="辛さ 3段階中 0"><svg><use href="#chili"/></svg><svg><use href="#chili"/></svg><svg><use href="#chili"/></svg><span class="spice-txt" aria-hidden="true">辛くない</span></span>
+        </li>
+      </ul>
+
+      <ul class="extras">
+        <li><span><b>ノパル（サボテン）とケソフレスコ</b><small>ウチワサボテンの鉄板焼きとフレッシュチーズ。肉を使わない一品</small></span><span class="spice" role="img" aria-label="辛さ 3段階中 0"><svg><use href="#chili"/></svg><svg><use href="#chili"/></svg><svg><use href="#chili"/></svg></span><p class="price"><span class="yen">450</span>円</p></li>
+        <li><span><b>コチニータ・ピビル</b><small>豚肉をオレンジとアチョーテで煮込み、赤玉ねぎの酢漬けをのせて</small></span><span class="spice" role="img" aria-label="辛さ 3段階中 1"><svg class="on"><use href="#chili"/></svg><svg><use href="#chili"/></svg><svg><use href="#chili"/></svg></span><p class="price"><span class="yen">500</span>円</p></li>
+        <li><span><b>トトポスとワカモレ</b><small>トルティーヤの端を揚げたチップスに、アボカドを潰したディップ</small></span><span class="spice" role="img" aria-label="辛さ 3段階中 0"><svg><use href="#chili"/></svg><svg><use href="#chili"/></svg><svg><use href="#chili"/></svg></span><p class="price"><span class="yen">680</span>円</p></li>
+      </ul>
+      <p class="note">価格は税込。卓上のサルサは4種で、緑（トマティーヨ）から赤（チレ・デ・アルボル）の順に辛くなります。料理写真はイメージです。</p>
+    </div>
+  </section>
+
+  <!-- トルティーヤ -->
+  <section class="masa" id="masa">
+    <div class="wrap masa-in">
+      <div class="masa-pics">
+        <div class="big print grain pop"><img src="img/masa.jpg" alt="手のひらでトルティーヤの生地を伸ばす手元" width="1400" height="934" loading="lazy"></div>
+        <div class="s1 print grain pop"><img src="img/press.jpg" alt="鉄のトルティーヤプレスと焼き上がったトルティーヤ" width="1100" height="734" loading="lazy"></div>
+        <div class="s2 grain pop"><img src="img/comal.jpg" alt="鉄板の上でトルティーヤを返すところ" width="1100" height="734" loading="lazy"></div>
+      </div>
+      <div class="body">
+        <h2 class="riso" data-text="トウモロコシを&#10;煮るところから。">トウモロコシを
+煮るところから。</h2>
+        <p>メキシコ産の白トウモロコシを、石灰を溶かした湯で煮て一晩おきます。朝7時に石臼で挽いて生地に。この工程を省いた粉のトルティーヤとは、香りがまるで違います。</p>
+        <p>生地は1枚38gずつ丸め、手押しのプレスで伸ばして鉄板で焼きます。焼き置きはしません。注文を受けてからもう一度温め、具を包みます。</p>
+        <dl class="facts">
+          <div><dt>トウモロコシ</dt><dd>メキシコ・ハリスコ州の白トウモロコシ</dd></div>
+          <div><dt>1日に打つ枚数</dt><dd>およそ600枚。なくなったら小麦の生地に切り替えます</dd></div>
+          <div><dt>小麦・卵</dt><dd>トウモロコシの生地には使っていません（揚げ物と同じ厨房です）</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ドリンク -->
+  <section class="drink sec" id="drink">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 class="riso" data-text="夜は、メスカルと&#10;樽生ビールで。" style="white-space:pre-line">夜は、メスカルと
+樽生ビールで。</h2>
+        <p>17:30からはお酒の時間。タコスは1ピースずつ追加できるので、つまみながら長居してください。</p>
+      </div>
+      <div class="drink-grid">
+        <article class="dk">
+          <div class="ph grain pop"><img src="img/mezcal.jpg" alt="赤い幕の前に置かれたメスカルのショットグラス" width="733" height="1100" loading="lazy"></div>
+          <h3><span class="es">Mezcal</span>メスカル</h3>
+          <p>オアハカの小さな蒸留所のものを中心に7種。最初の1杯は、オレンジと唐辛子塩を添えてショットで。煙のような香りがタコスの脂を流してくれます。</p>
+          <dl>
+            <div><dt>ショット（30ml）</dt><dd>900〜1,600円</dd></div>
+            <div><dt>飲み比べ3種</dt><dd>2,400円</dd></div>
+          </dl>
+        </article>
+        <article class="dk">
+          <div class="ph grain pop"><img src="img/beer.jpg" alt="カウンターに置かれたパイントグラスのビール" width="880" height="1100" loading="lazy"></div>
+          <h3><span class="es">Cerveza</span>樽生ビール</h3>
+          <p>国内のブルワリーから4種をつなぎ、毎週1つずつ入れ替えます。タコスに合わせるなら、苦みの少ないメキシカンラガーがいちばん。</p>
+          <dl>
+            <div><dt>パイント</dt><dd>950円</dd></div>
+            <div><dt>ハーフ</dt><dd>600円</dd></div>
+          </dl>
+        </article>
+      </div>
+      <p class="soft"><span><b>ハマイカ</b>　ハイビスカスの冷たいお茶 450円</span><span><b>オルチャータ</b>　米とシナモンの甘い飲みもの 500円</span></p>
+    </div>
+  </section>
+
+  <!-- テイクアウト -->
+  <section class="togo sec" id="togo">
+    <div class="wrap">
+      <div class="sec-head stack">
+        <h2 class="riso" data-text="持ち帰りの頼み方">持ち帰りの頼み方</h2>
+        <p>お店で食べるのと同じタコスを、1ピースから包みます。10ピース以上は前日までにお電話ください。</p>
+      </div>
+      <div class="togo-grid">
+        <ol class="steps">
+          <li><h3>電話で注文する</h3><p><a href="tel:0300000000">03-0000-0000</a> へ。品名と数、受け取りたい時間を伝えてください。受付は11:00〜22:00です。</p></li>
+          <li><h3>15分後から受け取れます</h3><p>トルティーヤは注文を受けてから温めます。12時台は混むので、25分ほど見ておいてください。</p></li>
+          <li><h3>店頭の窓口で受け取る</h3><p>入口右の「PARA LLEVAR」の窓口へ。現金・カード・QR決済が使えます。</p></li>
+          <li><h3>30分以内に食べる</h3><p>サルサは別の容器に入れてあります。冷めたらフライパンで片面30秒ずつ温め直すと、焼きたてに近づきます。</p></li>
+        </ol>
+        <div class="togo-pic">
+          <div class="grain pop"><img src="img/togo.jpg" alt="紙の箱に詰めたタコスとライム" width="733" height="1100" loading="lazy"></div>
+          <a class="btn" href="tel:0300000000"><svg aria-hidden="true"><use href="#i-tel"/></svg>電話で持ち帰りを頼む</a>
+          <small>箱代はいただきません。保冷バッグの持ち込みも歓迎です。</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 店内・営業時間・アクセス -->
+  <section class="sec info" id="info">
+    <div class="wrap">
+      <div class="info-grid">
+        <div>
+          <div class="ph print grain pop"><img src="img/inside.jpg" alt="テーブル席とドリンクの冷蔵庫が並ぶ店内" width="1100" height="708" loading="lazy"></div>
+          <p class="seats">ベビーカーのまま入れます。お子さん用の小さなタコス（1ピース300円）もあります。</p>
+        </div>
+        <div>
+          <h2 class="riso info-h" data-text="お店のこと">お店のこと</h2>
+          <p class="info-lead">カウンター8席とテーブル16席。夜のテーブル席だけ、お電話で予約を受けています。</p>
+          <table class="week" id="week">
+            <caption>火曜定休。祝日は通常どおり営業します。</caption>
+            <thead><tr><td></td><th scope="col">月</th><th scope="col">火</th><th scope="col">水</th><th scope="col">木</th><th scope="col">金</th><th scope="col">土</th><th scope="col">日</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">昼</th><td>11:30<br>15:00</td><td class="off">休</td><td>11:30<br>15:00</td><td>11:30<br>15:00</td><td>11:30<br>15:00</td><td>11:30<br>15:00</td><td>11:30<br>15:00</td></tr>
+              <tr><th scope="row">夜</th><td>17:30<br>23:00</td><td class="off">休</td><td>17:30<br>23:00</td><td>17:30<br>23:00</td><td>17:30<br>23:00</td><td>17:30<br>23:00</td><td>17:30<br>22:00</td></tr>
+            </tbody>
+          </table>
+          <div class="addr">
+            <p>東京都目黒区鷹番〇丁目〇-〇（架空の住所）<br>東急東横線 学芸大学駅 東口から徒歩2分</p>
+            <a class="tel" href="tel:0300000000">03-0000-0000<small>架空の番号です</small></a><br>
+            <a class="map-link" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%AD%A6%E8%8A%B8%E5%A4%A7%E5%AD%A6%E9%A7%85" target="_blank" rel="noopener"><svg width="20" height="20" aria-hidden="true"><use href="#i-pin"/></svg>Googleマップで開く</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="ft">
+  <div class="wrap">
+    <div><p class="mk">Chispa</p><p>タケリア・チスパ（架空の店・デザイン見本）</p></div>
+    <p>写真：Unsplash</p>
+  </div>
+</footer>
+
+<nav class="spbar" aria-label="お店への連絡">
+  <a href="tel:0300000000"><svg aria-hidden="true"><use href="#i-tel"/></svg>電話</a>
+  <a class="main" href="#togo"><svg aria-hidden="true"><use href="#i-bag"/></svg>持ち帰りの頼み方</a>
+  <a href="https://www.google.com/maps/search/?api=1&amp;query=%E5%AD%A6%E8%8A%B8%E5%A4%A7%E5%AD%A6%E9%A7%85" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-pin"/></svg>地図</a>
+</nav>
+<p class="demo">架空の店のデザイン見本です（制作：プラチナ企画）</p>
+
+<script>
+(() => {
+  const hd = document.getElementById('hd');
+  const onScroll = () => hd.classList.toggle('is-solid', scrollY > 30);
+  onScroll(); addEventListener('scroll', onScroll, {passive:true});
+
+  // 東京の現在時刻から「営業中／準備中／定休」を出す（実際の状態を示すときだけ点を光らせる）
+  const now = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Tokyo'}));
+  const d = now.getDay(), m = now.getHours() * 60 + now.getMinutes();
+  const dinnerEnd = d === 0 ? 22 * 60 : 23 * 60;
+  const st = document.getElementById('status'), label = st.querySelector('span');
+  let text, open = false;
+  if (d === 2) text = '本日は定休日（火曜）';
+  else if (m >= 690 && m < 900) { text = '営業中　15:00まで'; open = true; }
+  else if (m >= 1050 && m < dinnerEnd) { text = `営業中　${dinnerEnd / 60}:00まで`; open = true; }
+  else if (m < 690) text = '本日は11:30から';
+  else if (m < 1050) text = '準備中　17:30から';
+  else text = '本日の営業は終了';
+  label.textContent = text;
+  st.classList.toggle('is-open', open);
+
+  // 営業時間の表で今日の列に色をつける（表は月曜始まり）
+  const col = d === 0 ? 7 : d;
+  document.querySelectorAll('#week tr').forEach(tr => tr.children[col] && tr.children[col].classList.add('today'));
+})();
+</script>
+</body>
+</html>
