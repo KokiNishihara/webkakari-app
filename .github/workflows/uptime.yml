@@ -15,6 +15,8 @@ jobs:
           for i in 1 2 3; do
             code=$(curl -s -o body.txt -w '%{http_code}' --max-time 20 https://webkakari-app.onrender.com/healthz/full || echo 000)
             if [ "$code" = "200" ]; then echo "ok"; exit 0; fi
+            # 新しい点検URLがまだ本番に無い（更新前）ときは、従来の /healthz で確かめる
+            if [ "$code" = "404" ]; then code=$(curl -s -o body.txt -w '%{http_code}' --max-time 20 https://webkakari-app.onrender.com/healthz || echo 000); [ "$code" = "200" ] && { echo "ok（/healthz）"; exit 0; }; fi
             echo "試行$i：$code $(cat body.txt 2>/dev/null)"; sleep 20
           done
           echo "::error::本番サーバーが応答していません（全店のHPが止まっている可能性があります）"
