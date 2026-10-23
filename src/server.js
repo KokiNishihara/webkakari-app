@@ -28,7 +28,7 @@ const APP_HOST = new URL(BASE_URL).host;
 
 // 死活確認（Render のヘルスチェック用）。DB が読めることまで確かめる
 app.get('/healthz', (req, res) => { try { one('SELECT 1 AS ok'); res.send('ok'); } catch { res.status(500).send('db error'); } });
-// 外部の監視（GitHub Actions）が5分ごとに見る。DB・ディスク・HPのファイルを確かめる（お客さまの情報は返さない）
+// 外部の監視（GitHub Actions）が1時間ごとに見る。DB・ディスク・HPのファイルを確かめる（お客さまの情報は返さない）
 app.get('/healthz/full', (req, res) => { const p = quickStatus(); res.set('Cache-Control', 'no-store'); p.length ? res.status(503).send('ng: ' + p.join(',')) : res.send('ok'); });
 
 // 営業用のサービスサイト（院のWeb係・飲食店のWeb係）。SERVICE_DOMAIN_CLINIC / SERVICE_DOMAIN_FOOD のドメインで来たら返す。

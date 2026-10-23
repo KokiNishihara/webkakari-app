@@ -219,7 +219,7 @@ export function reportText(r, baseUrl) {
   return `停止につながる問題がないか、自動で点検しました（${jstDay(r.at)}）。\n要対応 ${r.ng} 件／注意 ${r.warn} 件\n\n${lines.join('\n')}\n\n■ 手で確かめること（毎週）\n・GitHub から「監視」の失敗メールが来ていないか\n・今週のシステム更新は、お店の営業時間外（平日 6:00〜10:00 など）に行ったか\n\n点検の画面：${baseUrl}/admin/health`;
 }
 
-// /healthz/full（外部の監視が5分ごとに見る）：お客さまの情報は出さない
+// /healthz/full（外部の監視が1時間ごとに見る）：お客さまの情報は出さない
 export function quickStatus() {
   const problems = [];
   try { one('SELECT 1 AS ok'); } catch { problems.push('db'); }
